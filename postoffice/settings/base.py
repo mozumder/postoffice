@@ -135,7 +135,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Logging
-LOG_DIR = config('LOG_DIR',default='log/')
+LOG_DIR = config('LOG_DIR',default='log')
 
 LOGGING = {
     'version': 1,
@@ -173,7 +173,7 @@ LOGGING = {
         'logfile': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': f'{LOG_DIR}{PROJECT_NAME}.log',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.log',
             'formatter': 'log',
             'encoding': 'utf8',
         },
@@ -185,35 +185,35 @@ LOGGING = {
         'errors': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': f'{LOG_DIR}{PROJECT_NAME}.error.log',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.error.log',
             'formatter': 'threaded',
             'encoding': 'utf8',
         },
         'access': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': f'{LOG_DIR}{PROJECT_NAME}.access.log',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.access.log',
             'formatter': 'message',
             'encoding': 'utf8',
         },
         'cache': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': f'{LOG_DIR}{PROJECT_NAME}.cache.log',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.cache.log',
             'formatter': 'message',
             'encoding': 'utf8',
         },
         'database': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': f'{LOG_DIR}{PROJECT_NAME}.db.log',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.db.log',
             'formatter': 'log',
             'encoding': 'utf8',
         },
         'mail': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': f'{LOG_DIR}{PROJECT_NAME}.mail.log',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.mail.log',
             'formatter': 'message',
             'encoding': 'utf8',
         },
@@ -260,5 +260,3 @@ LOGGING = {
         },
     },
 }
-
-
