@@ -4,5 +4,8 @@ local.env
 local.py
 *pyc
 scratch.*
+static/
 log/
 venv/
+postgres/
+redis/
