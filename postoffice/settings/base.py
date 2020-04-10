@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 #    'analytics',
     'accounts',
     'rules',
+    'dns',
 ]
 
 MIDDLEWARE = [
