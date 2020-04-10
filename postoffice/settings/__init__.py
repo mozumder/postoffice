@@ -1,23 +1,14 @@
+from decouple import config
+
+run_env = config('DJANGO_RUN_ENV', default='development').lower()
+
 from .base import *
-ENV = None
-#from .production import *
-try:
+
+if run_env == "production":
     from .production import *
-    ENV = 'prod'
-except:
-    ENV = None
-
-if ENV == None:
-    try:
-        from .staging import *
-        ENV = 'staging'
-    except:
-        ENV = None
-
-if ENV == None:
-    try:
-        from .development import *
-        ENV = 'dev'
-    except:
-        ENV = None
-
+elif run_env == "staging":
+    from .staging import *
+elif run_env == "development":
+    from .development import *
+elif run_env == "testing":
+    from .testing import *

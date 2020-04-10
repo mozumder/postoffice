@@ -1,4 +1,8 @@
 uwsgi.ini
+settings.ini
+local.env
 local.py
 *pyc
-
+scratch.*
+log/
+venv/

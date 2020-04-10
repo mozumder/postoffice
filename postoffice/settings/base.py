@@ -12,12 +12,17 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 from pathlib import Path
+from decouple import config
 
 PROJECT_NAME = 'postoffice'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = Path(__file__).resolve().parents[2]
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = config('DJANGO_SECRET_KEY',default='')
+
+DEBUG = config('DJANGO_DEBUG', default=False).lower()
 
 # Application definition
 
@@ -28,7 +33,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-#    'crispy_forms',
 #    'unchained',
 #    'analytics',
     'accounts',
@@ -67,6 +71,25 @@ WSGI_APPLICATION = 'postoffice.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': config('POSTGRES_DB'), # Or path to database file if using sqlite3.
+        'USER': config('POSTGRES_USER'),
+        'PASSWORD': config('POSTGRES_PW'),
+        'HOST': config('POSTGRES_HOST',default='localhost'), # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': config('POSTGRES_PORT',default=None), # Set to empty string for default.
+        'CONN_MAX_AGE': None,
+    }
+}
+
+CACHES = {
+    'default': {
+         'BACKEND': 'redis_cache.RedisCache',
+         'LOCATION': config('CACHE_LOCATION',default='/var/run/redis/redis.sock'),
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -111,107 +134,131 @@ VENV_PATH = os.path.dirname(BASE_DIR)
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-
 # Logging
+LOG_DIR = config('LOG_DIR',default='log/')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
         'log': {
-            'format': '%(asctime)s.%(msecs)03d | %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S",
-        },
-        'debug': {
-            'format': '%(levelname)s: (%(module)-10s) %(message)s'
-        },
-        'verbose': {
-            'format': '%(asctime)s.%(msecs)03d | %(levelname)s | %(module)-10s | %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S",
-        },
-        'threaded': {
-            'format': '%(asctime)s.%(msecs)03d | %(levelname)s | %(process)d (%(threadName)-10s) | %(module)-10s | %(message)s',
-            'datefmt': "%Y-%m-%d %H:%M:%S",
+            'format': '%(asctime)s.%(msecs)02d %(levelname)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
         'simple': {
-            'format': '%(levelname)s: %(message)s'
+            'format': '%(levelname)s: %(message)s',
+        },
+        'raw': {
+            'format': '%(message)s',
+        },
+        'debug': {
+            'format': '%(asctime)s.%(msecs)02d %(levelname)s: (%(module)-10s) %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'message': {
+            'format': '%(asctime)s.%(msecs)02d %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
+        },
+        'threaded': {
+            'format': '%(asctime)s.%(msecs)02d | %(process)d: %(module)-10s (%(threadName)-10s) | %(levelname)s: %(message)s',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
     },
     'handlers': {
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'debug'
+            'formatter': 'simple',
+        },
+        'logfile': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': f'{LOG_DIR}{PROJECT_NAME}.log',
+            'formatter': 'log',
+            'encoding': 'utf8',
         },
         'management': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
-        },
-        'logfile': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/django/mail.mozumder.net.log',
-            'formatter': 'log'
+            'formatter': 'simple',
         },
         'errors': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django/mail.mozumder.net.error',
-            'formatter': 'verbose'
+            'filename': f'{LOG_DIR}{PROJECT_NAME}.error.log',
+            'formatter': 'threaded',
+            'encoding': 'utf8',
         },
         'access': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django/mail.mozumder.net.access',
+            'filename': f'{LOG_DIR}{PROJECT_NAME}.access.log',
+            'formatter': 'message',
+            'encoding': 'utf8',
         },
         'cache': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django/mail.mozumder.net.cache',
-            'formatter': 'log'
+            'filename': f'{LOG_DIR}{PROJECT_NAME}.cache.log',
+            'formatter': 'message',
+            'encoding': 'utf8',
         },
         'database': {
-            'level': 'DEBUG',
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django/mail.mozumder.net.db',
-            'formatter': 'log'
+            'filename': f'{LOG_DIR}{PROJECT_NAME}.db.log',
+            'formatter': 'log',
+            'encoding': 'utf8',
+        },
+        'mail': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': f'{LOG_DIR}{PROJECT_NAME}.mail.log',
+            'formatter': 'message',
+            'encoding': 'utf8',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console','logfile','errors'],
+            'handlers': ['console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-        },
-        'mail': {
-            'handlers': ['logfile','errors'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': True,
         },
         'management': {
             'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'level': os.getenv('DJANGO_MANAGEMENT_LOG_LEVEL', 'DEBUG'),
             'propagate': True,
         },
         'analytics': {
             'handlers': ['access'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'level': os.getenv('DJANGO_ANALYTICS_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
         'cache': {
-            'handlers': ['cache','errors'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'handlers': ['cache'],
+            'level': os.getenv('DJANGO_CACHE_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
         'database': {
-            'handlers': ['database','console','errors'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'handlers': ['database'],
+            'level': os.getenv('DJANGO_DB_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
+            'propagate': True,
+        },
+        'django.db.backends': {
+            'handlers': ['database'],
+            'level': os.getenv('DJANGO_DB_LOG_LEVEL', 'INFO'),
+            'propagate': True,
+        },
+        'mail': {
+            'handlers': ['mail'],
+            'level': os.getenv('DJANGO_MAIL_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
         'images': {
-            'handlers': ['console','logfile','errors'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_IMAGESAPP_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
     },
 }
+
 
