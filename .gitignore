@@ -1,0 +1,4 @@
+uwsgi.ini
+local.py
+*pyc
+
