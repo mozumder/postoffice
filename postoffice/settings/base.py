@@ -23,7 +23,10 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 SECRET_KEY = config('DJANGO_SECRET_KEY',default='')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DJANGO_DEBUG', default=False).lower()
+DEBUG = config('DJANGO_DEBUG', default=False)
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=[ '127.0.0.1' ])
+
 
 # Application definition
 
