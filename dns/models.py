@@ -133,6 +133,42 @@ class A_Record(models.Model):
                 name='a_record_uniques'),
         ]
 
+class DynamicDNSAccount(models.Model):
+    owner = models.ForeignKey(
+        User,
+        verbose_name="Owner",
+        related_name="dyndnsaccount_owner",
+        on_delete=models.CASCADE)
+    domains = models.ManyToManyField(Domain)
+    username = models.CharField(
+        verbose_name='User Name',
+        max_length=15)
+    password = models.CharField(
+        verbose_name='Password',
+        max_length=40,
+        null=True, blank=True)
+    date_updated = models.DateTimeField(
+        auto_now=True)
+    def __str__(self):
+        return self.username
+    class Meta:
+        verbose_name = 'Dynamic DNS Account'
+        indexes = [
+            models.Index(
+                fields = [
+                    'owner',
+                    'username'],
+                name='dyndnsaccount_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields = [
+                    'owner',
+                    'username'],
+                name='dyndnsaccount_uniques')
+        ]
+
+
 class DynamicDNS(models.Model):
     a_record = models.OneToOneField(
         A_Record,
@@ -143,7 +179,8 @@ class DynamicDNS(models.Model):
         db_index=True, unique=True)
     password = models.CharField(
         verbose_name='Record Password',
-        max_length=15)
+        max_length=40,
+        null=True, blank=True)
     date_updated = models.DateTimeField(
         auto_now=True)
 

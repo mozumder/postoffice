@@ -42,12 +42,13 @@ class DynamicDNSManager:
         if current_ip == r.headers['ip']:
             return
 
+        endpoint = options['dynamic_dns_update_endpoint']
+        username = options['dynamic_dns_update_username']
+
         dyndns = DynamicDNS.objects.all()
         
         for dyn in dyndns:
             if new_ip != dyn.a_record.ip_address and dyn.a_record.dynamic_ip == True:
-                endpoint = options['dynamic_dns_update_endpoint']
-                username = options['dynamic_dns_update_username']
                 dns_update_payload = {
                     'username':username,
                     'password':dyn.password,

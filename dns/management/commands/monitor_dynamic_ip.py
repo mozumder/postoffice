@@ -43,6 +43,5 @@ class Command(BaseCommand):
         if options['dynamic_dns_update_username'] == None:
             raise CommandError("Need a Dynamic DNS Username to update IP address.")
 
-        while True:
-            DynamicDNSManager.update(options)
+        while DynamicDNSManager.update(options) != 2:
             time.sleep(options['interval'])

@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import Domain, Host, A_Record, IPLog, DynamicDNS
+from .models import Domain, Host, A_Record, IPLog, DynamicDNSAccount, DynamicDNS
 # Register your models here.
 
 @admin.register(Domain)
@@ -60,6 +60,7 @@ class A_RecordAdmin(admin.ModelAdmin):
         return html
     list_display = ['__str__', 'name', domain, 'ip_address', 'ttl', 'dynamic_ip', 'date_updated']
     list_display_links = ['__str__',]
+    list_editable = ['dynamic_ip',]
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
@@ -88,6 +89,23 @@ class IPLogAdmin(admin.ModelAdmin):
         }),
     ]
     readonly_fields=('date_updated',)
+
+@admin.register(DynamicDNSAccount)
+class DynamicDNSAccountAdmin(admin.ModelAdmin):
+    list_display = ['owner', 'username', 'password', 'date_updated']
+    list_display_links = ['username',]
+    search_fields = ['username']
+    fieldsets = [
+        (None, {'fields': [
+            ('owner'),
+            ('username', 'password'),
+            ('date_updated'),
+            ('domains'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
 
 @admin.register(DynamicDNS)
 class DynamicDNSAdmin(admin.ModelAdmin):
