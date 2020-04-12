@@ -58,12 +58,14 @@ class A_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', 'name', domain, 'ip_address', 'ttl', 'date_updated']
+    list_display = ['__str__', 'name', domain, 'ip_address', 'ttl', 'dynamic_ip', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
             ('name'),
+            ('ip_address'),
+            ('dynamic_ip'),
             ('host'),
             ('domain'),
             ('ttl'),

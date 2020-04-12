@@ -22,8 +22,15 @@ class Command(BaseCommand):
             '--ttl',
             action='store',
             dest='ttl',
-            default=settings.TTL,
+            default=settings.RECORD_TTL,
             help='Time-to-live of added A Name record',
+            )
+        parser.add_argument(
+            '-dyn','--dynamic_ip',
+            action='store_true',
+            dest='dynamic_ip',
+            default=False,
+            help='Allow IP address updates with Dynamic DNS',
             )
         parser.add_argument(
             'domain',
@@ -63,6 +70,7 @@ class Command(BaseCommand):
         a_record.host = None
         a_record.ip_address = options['ip_address']
         a_record.ttl = options['ttl']
+        a_record.dynamic_ip = options['dynamic_ip']
         a_record.save()
         if a_created:
             print(f'Created A Record {a_record} under domain {d}.')

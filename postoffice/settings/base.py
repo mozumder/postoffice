@@ -27,8 +27,11 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1', cast=Csv())
 
-PING_URL = config('PING_URL', default='http://127.0.0.1:8000')
-TTL = config('TTL', default=14400)
+RECORD_TTL = config('RECORD_TTL', default=14400, cast=int)
+IP_PING_URL = config('IP_PING_URL', default=None)
+IP_PING_INTERVAL = config('IP_PING_INTERVAL', default=900, cast=int)
+DYNDNS_ENDPOINT = config('DYNDNS_ENDPOINT', default=None)
+DYNDNS_USERNAME = config('DYNDNS_USERNAME', default=None)
 
 
 # Application definition
@@ -218,6 +221,13 @@ LOGGING = {
             'formatter': 'log',
             'encoding': 'utf8',
         },
+        'dns': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': f'{LOG_DIR}/{PROJECT_NAME}.dns.log',
+            'formatter': 'log',
+            'encoding': 'utf8',
+        },
         'mail': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
@@ -229,41 +239,46 @@ LOGGING = {
     'loggers': {
         'django': {
             'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'level': config('DJANGO_LOG_LEVEL', default='INFO'),
         },
         'management': {
             'handlers': ['console'],
-            'level': os.getenv('DJANGO_MANAGEMENT_LOG_LEVEL', 'DEBUG'),
+            'level': config('DJANGO_MANAGEMENT_LOG_LEVEL', default='DEBUG'),
             'propagate': True,
         },
         'analytics': {
             'handlers': ['access'],
-            'level': os.getenv('DJANGO_ANALYTICS_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
+            'level': config('DJANGO_ANALYTICS_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
         'cache': {
             'handlers': ['cache'],
-            'level': os.getenv('DJANGO_CACHE_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
+            'level': config('DJANGO_CACHE_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
         'database': {
             'handlers': ['database'],
-            'level': os.getenv('DJANGO_DB_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
+            'level': config('DJANGO_DB_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO'),
+            'propagate': True,
+        },
+        'dns': {
+            'handlers': ['console', 'dns'],
+            'level': config('DJANGO_DNS_LOG_LEVEL', default='DEBUG'),
             'propagate': True,
         },
         'django.db.backends': {
             'handlers': ['database'],
-            'level': os.getenv('DJANGO_DB_LOG_LEVEL', 'INFO'),
+            'level': config('DJANGO_DB_LOG_LEVEL', default='INFO'),
             'propagate': True,
         },
         'mail': {
             'handlers': ['mail'],
-            'level': os.getenv('DJANGO_MAIL_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
+            'level': config('DJANGO_MAIL_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
         'images': {
             'handlers': ['console'],
-            'level': os.getenv('DJANGO_IMAGESAPP_LOG_LEVEL', 'DEBUG' if DEBUG else 'INFO'),
+            'level': config('DJANGO_IMAGESAPP_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
     },

@@ -22,6 +22,20 @@ class Command(BaseCommand):
             help='IP Address',
             )
         parser.add_argument(
+            '-dynamic','--dynamic_ip',
+            action='store_true',
+            dest='dynamic_ip',
+            default=None,
+            help='Allow IP address updates with Dynamic DNS',
+            )
+        parser.add_argument(
+            '-static','--static_ip',
+            action='store_false',
+            dest='dynamic_ip',
+            default=None,
+            help='Disallow IP address updates with Dynamic DNS',
+            )
+        parser.add_argument(
             '-a', '--all',
             action='store_true',
             default=False,
@@ -45,8 +59,8 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['domain'] == None:
             raise CommandError("Need a Domain Name.")
-        if options['ip'] == None and options['ttl'] == None:
-            raise CommandError("No IP Address or TTL.")
+        if options['ip'] == None and options['ttl'] == None and options['dynamic_ip'] == None:
+            raise CommandError("No IP Address, TTL, or Dynamic IP setting.")
         try:
             domain = Domain.objects.get(name=options['domain'])
         except:
@@ -59,10 +73,12 @@ class Command(BaseCommand):
 
         if records:
             for record in records:
-                if options['ip']:
+                if options['ip'] != None:
                     record.ip_address = options['ip']
-                if options['ttl']:
+                if options['ttl'] != None:
                     record.ttl = options['ttl']
+                if options['dynamic_ip'] != None:
+                    record.dynamic_ip = options['dynamic_ip']
                 record.save()
                 print(f'A Record {record} updated.')
         else:

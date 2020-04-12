@@ -94,7 +94,10 @@ class A_Record(models.Model):
         on_delete=models.CASCADE)
     ttl = models.IntegerField(
         verbose_name="TTL",
-        default=settings.TTL)
+        default=settings.RECORD_TTL)
+    dynamic_ip = models.BooleanField(
+        verbose_name="Dynamic IP",
+        default=False)
     date_updated = models.DateTimeField(
         auto_now=True)
     def __str__(self):
