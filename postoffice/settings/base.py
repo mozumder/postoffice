@@ -27,6 +27,9 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1', cast=Csv())
 
+PING_URL = config('PING_URL', default='http://127.0.0.1:8000')
+TTL = config('TTL', default=14400)
+
 
 # Application definition
 
