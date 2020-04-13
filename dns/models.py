@@ -169,6 +169,81 @@ class IPLog(models.Model):
         verbose_name = 'IP Address'
         verbose_name_plural = 'IP Addresses'
 
+class SOA_Record(models.Model):
+    domain = models.ForeignKey(
+        Domain,
+        verbose_name=_("Domain"),
+        on_delete=models.CASCADE)
+    origin = models.CharField(
+        verbose_name=_("Origin"),
+        max_length=64,
+        null=True, blank=True)
+    rname = models.CharField(
+        verbose_name=_("Responsible Party Name"),
+        max_length=64,
+        null=True, blank=True)
+    nameserver = models.CharField(
+        verbose_name=_("Name Server"),
+        max_length=64,
+        null=True, blank=True)
+    nameserver_host = models.ForeignKey(
+        Host,
+        verbose_name=_("Name Server Host"),
+        null=True, blank=True,
+        on_delete=models.CASCADE)
+    refresh = models.IntegerField(
+        verbose_name=_("Refresh Time"),
+        default=43200)
+    retry = models.IntegerField(
+        verbose_name=_("Retry Time"),
+        default=3600)
+    expiry = models.IntegerField(
+        verbose_name=_("Expiration Time"),
+        default=1209600)
+    nxttl = models.IntegerField(
+        verbose_name=_("Negative Caching Time"),
+        default=180)
+    serial = models.IntegerField(
+        verbose_name=_("Serial Number"),
+        default=0)
+    source = models.CharField(
+        _("Source"),
+        max_length=1,
+        choices=SOURCE_CHOICES)
+    date_updated = models.DateTimeField(
+        verbose_name=_("Date Updated"),
+        auto_now=True)
+    def __str__(self):
+        if self.host:
+            return f'{self.name}.{self.domain.name}'
+        else:
+            return f'.{self.domain.name}'
+    def domain_name(self):
+        names = self.name.split(".")[1:]
+        tld = names[-1]
+        if len(names) > 1:
+            domain = names[-2] + '.' + tld
+        else:
+            domain = ''
+        if len(names) > 2:
+            domain = names[-3] + "." + domain
+        return domain
+    class Meta:
+        ordering = ['domain']
+        verbose_name = 'SOA Record'
+        indexes = [
+            models.Index(
+                fields = [
+                    'domain'],
+                name='soa_record_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields = [
+                    'domain'],
+                name='soa_record_uniques'),
+        ]
+
 class A_Record(models.Model):
     domain = models.ForeignKey(
         Domain,

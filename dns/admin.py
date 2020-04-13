@@ -42,6 +42,44 @@ class HostAdmin(admin.ModelAdmin):
     ]
     readonly_fields=('date_updated',)
 
+@admin.register(SOA_Record)
+class SOA_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'origin', 'rname', 'nameserver', 'refresh', 'retry', 'expiry', 'nxttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain'),
+            ('origin'),
+            ('rname'),
+            ('nameserver'),
+            ('nameserver_host'),
+            ('refresh'),
+            ('retry'),
+            ('expiry'),
+            ('nxttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
 @admin.register(A_Record)
 class A_RecordAdmin(admin.ModelAdmin):
     def host(obj):
@@ -64,11 +102,11 @@ class A_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
+            ('domain'),
             ('name'),
             ('ip_address'),
             ('dynamic_ip'),
             ('host'),
-            ('domain'),
             ('ttl'),
             ('serial'),
             ('source'),
@@ -99,10 +137,10 @@ class AAAA_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
+            ('domain'),
             ('name'),
             ('ip_address'),
             ('host'),
-            ('domain'),
             ('ttl'),
             ('serial'),
             ('source'),
