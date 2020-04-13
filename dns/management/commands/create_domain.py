@@ -8,37 +8,34 @@ from django.conf import settings
 from dns.models import Domain, A_Record
 
 class Command(BaseCommand):
-    help = ('Create a domain with username as its owner')
+    help = ("Create a domain with username as its owner")
 
     def add_arguments(self, parser):
         parser.add_argument(
             '-u','--username',
             action='store',
-            dest='username',
             default=None,
-            help='Username of domain owner. Otherwise will use first user',
+            help="Username of domain owner. Otherwise will use first user",
             )
         parser.add_argument(
             '--ttl',
             action='store',
-            dest='ttl',
             default=settings.RECORD_TTL,
-            help='Time-to-live of added A Name record',
+            help="Time-to-live of added A Name record",
             )
         parser.add_argument(
             '-dyn','--dynamic_ip',
             action='store_true',
             dest='dynamic_ip',
             default=False,
-            help='Allow IP address updates with Dynamic DNS',
+            help="Allow IP address updates with Dynamic DNS",
             )
         parser.add_argument(
             'domain',
             nargs='?',
             action='store',
-            dest='domain',
             default=None,
-            help='Domain name to be created',
+            help="Domain name to be created",
             )
         parser.add_argument(
             'ip_address',
@@ -49,6 +46,7 @@ class Command(BaseCommand):
             )
 
     def handle(self, *args, **options):
+        print(options)
         if options['domain'] == None:
             raise CommandError("Need a Domain Name.")
         if options['ip_address'] == None:
@@ -66,9 +64,8 @@ class Command(BaseCommand):
         else:
             print(f'Domain {d} with owner {d.owner} already exists.')
 
-        a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None)
+        a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None, ip_address=options['ip_address'])
         a_record.host = None
-        a_record.ip_address = options['ip_address']
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
         a_record.save()

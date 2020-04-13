@@ -7,7 +7,7 @@ from django.conf import settings
 from dns.models import Host, Domain
 
 class Command(BaseCommand):
-    help = ('Delete a host under a domain')
+    help = ("Delete a host under a domain")
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,14 +15,14 @@ class Command(BaseCommand):
             nargs='?',
             action='store',
             default=None,
-            help='Domain name that host is under',
+            help="Domain name that host is under",
             )
         parser.add_argument(
             'host',
             nargs='?',
             action='store',
             default=None,
-            help='Host name to be deleted',
+            help="Host name to be deleted",
             )
 
     def handle(self, *args, **options):

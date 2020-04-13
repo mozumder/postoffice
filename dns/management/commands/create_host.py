@@ -7,28 +7,28 @@ from django.conf import settings
 from dns.models import Host, Domain, A_Record
 
 class Command(BaseCommand):
-    help = ('Create a host under a domain')
+    help = ("Create a host under a domain")
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--ttl',
             action='store',
             default=settings.RECORD_TTL,
-            help='Time-to-live of added A Name record',
+            help="Time-to-live of added A Name record",
             )
         parser.add_argument(
             '-dyn','--dynamic_ip',
             action='store_true',
             dest='dynamic_ip',
             default=False,
-            help='Allow IP address updates with Dynamic DNS',
+            help="Allow IP address updates with Dynamic DNS",
             )
         parser.add_argument(
             'domain',
             nargs='?',
             action='store',
             default=None,
-            help='Domain name that host is under',
+            help="Domain name that host is under",
             )
         parser.add_argument(
             'ip_address',
@@ -42,7 +42,7 @@ class Command(BaseCommand):
             nargs='?',
             action='store',
             default=None,
-            help='Host name to be created',
+            help="Host name to be created",
             )
 
     def handle(self, *args, **options):
@@ -65,9 +65,8 @@ class Command(BaseCommand):
         else:
             print(f'Host {h} under domain {h.domain} already exists.')
 
-        a_record, a_created = A_Record.objects.get_or_create(domain=domain, name=options['host'])
+        a_record, a_created = A_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ip_address'])
         a_record.host = h
-        a_record.ip_address = options['ip_address']
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
         a_record.save()

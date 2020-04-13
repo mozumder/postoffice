@@ -8,21 +8,26 @@ from django.conf import settings
 from dns.models import Domain, DynamicDNSAccount
 
 class Command(BaseCommand):
-    help = ('Create a Dynamic DNS account with username as its owner')
+    help = ("Create a Dynamic DNS account with username as its owner")
 
     def add_arguments(self, parser):
         parser.add_argument(
             '-u','--username',
             action='store',
             default=None,
-            help='Local owner of Dynamic DNS account. Otherwise will use first user',
+            help="Local owner of Dynamic DNS account. Otherwise will use first user",
             )
         parser.add_argument(
             '-p','--password',
             action='store',
             default=None,
-            help='Default password for Dynamic DNS account',
+            help="Default password for Dynamic DNS account",
             )
+        parser.add_argument(
+            '-e', '--dynamic_dns_update_endpoint',
+            action='store',
+            default=settings.DYNDNS_ENDPOINT,
+            help="URL Endpoint to update DNS record")
         parser.add_argument(
             'accountname',
             nargs='?',
@@ -35,7 +40,7 @@ class Command(BaseCommand):
             nargs='*',
             action='store',
             default=None,
-            help='Dynamic DNS domains for account',
+            help="Dynamic DNS domains for account",
             )
 
     def handle(self, *args, **options):

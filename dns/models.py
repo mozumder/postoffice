@@ -147,6 +147,9 @@ class DynamicDNSAccount(models.Model):
         verbose_name='Password',
         max_length=40,
         null=True, blank=True)
+    endpoint = models.URLField(
+        verbose_name='DNS Update Endpoint URL',
+        max_length=150)
     date_updated = models.DateTimeField(
         auto_now=True)
     def __str__(self):
@@ -192,7 +195,7 @@ class DynamicDNS(models.Model):
 
 
 class IPLog(models.Model):
-    address = models.GenericIPAddressField(
+    ip = models.GenericIPAddressField(
         verbose_name='IP Address',
         db_index=True)
     date_updated = models.DateTimeField(
@@ -200,7 +203,7 @@ class IPLog(models.Model):
         db_index=True)
 
     def __str__(self):
-        return self.address
+        return self.ip
 
     class Meta:
         ordering = ['-date_updated']

@@ -78,13 +78,13 @@ class A_RecordAdmin(admin.ModelAdmin):
 
 @admin.register(IPLog)
 class IPLogAdmin(admin.ModelAdmin):
-    list_display = ['date_updated','address',]
+    list_display = ['date_updated','ip',]
     list_display_links = ['date_updated',]
-    search_fields = ['address']
+    search_fields = ['ip']
     fieldsets = [
         (None, {'fields': [
-            ('id'),
-            ('date_updated','address'),
+            ('ip'),
+            ('date_updated'),
             ]
         }),
     ]
@@ -92,13 +92,14 @@ class IPLogAdmin(admin.ModelAdmin):
 
 @admin.register(DynamicDNSAccount)
 class DynamicDNSAccountAdmin(admin.ModelAdmin):
-    list_display = ['owner', 'username', 'password', 'date_updated']
+    list_display = ['owner', 'username', 'password', 'endpoint', 'date_updated']
     list_display_links = ['username',]
     search_fields = ['username']
     fieldsets = [
         (None, {'fields': [
             ('owner'),
             ('username', 'password'),
+            ('endpoint'),
             ('date_updated'),
             ('domains'),
             ]

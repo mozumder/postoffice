@@ -9,7 +9,7 @@ from django.conf import settings
 from dns.models import Host, Domain, A_Record, DynamicDNS
 
 class Command(BaseCommand):
-    help = ('Create Dynamic DNS authentication login for an A Record')
+    help = ("Create Dynamic DNS authentication login for an A Record")
 
     def add_arguments(self, parser):
         parser.add_argument(
