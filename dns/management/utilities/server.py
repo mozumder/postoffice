@@ -12,7 +12,7 @@ question = bitstruct.compile(question_format)
 answer_format = '>u16u16u32u16'
 answer = bitstruct.compile(answer_format)
 
-class EchoServerProtocol:
+class DNSServerProtocol:
     def connection_made(self, transport):
         self.transport = transport
 
@@ -105,7 +105,7 @@ class EchoServerProtocol:
         self.transport.sendto(data, addr)
 
 
-async def main():
+async def DNSServer(ip_address='127.0.0.1', port=53):
     print("Starting UDP server")
 
     # Get a reference to the event loop as we plan to use
@@ -115,8 +115,8 @@ async def main():
     # One protocol instance will be created to serve all
     # client requests.
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: EchoServerProtocol(),
-        local_addr=('127.0.0.1', 53))
+        lambda: DNSServerProtocol(),
+        local_addr=(ip_address, port))
 #        local_addr=('127.0.0.1', 9999))
 
     try:
@@ -125,4 +125,3 @@ async def main():
         transport.close()
 
 
-asyncio.run(main())
