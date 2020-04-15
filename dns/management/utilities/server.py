@@ -20,22 +20,24 @@ class DNSServerProtocol:
 
     def datagram_received(self, data, addr):
 #        message = data.decode()
-        hexdump.hexdump(data)
         print(f'Got datagram from {addr} with length {len(data)}')
+        hexdump.hexdump(data)
         print(f'HEADER: Starting byte 1')
-        message_id, response, operation, authoritative_answer, truncation, recursion_desired, recursion_available, response_code, questions_count, answers_count, authoritative_answers_count, additional_records_count = header.unpack(data)
-        print(f'  {message_id=}')
-        print(f'  {response=}')
-        print(f'  {operation=} ({OPCODE[operation]})')
-        print(f'  {authoritative_answer=}')
-        print(f'  {truncation=}')
-        print(f'  {recursion_desired=}')
-        print(f'  {recursion_available=}')
-        print(f'  {response_code=} ({RCODE[response_code]})')
-        print(f'  {questions_count=}')
-        print(f'  {answers_count=}')
-        print(f'  {authoritative_answers_count=}')
-        print(f'  {additional_records_count=}')
+        ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header.unpack(data)
+        print(f'  {ID_message_id=}')
+        print(f'  {QR_response=}')
+        print(f'  {OPCODE_operation=} ({OPCODE[OPCODE_LOOKUP[OPCODE_operation]]})')
+        print(f'  {AA_authoritative_answer=}')
+        print(f'  {TC_truncation=}')
+        print(f'  {RD_recursion_desired=}')
+        print(f'  {RA_recursion_available=}')
+        print(f'  {AD_authentic_data=}')
+        print(f'  {CD_checking_disabled=}')
+        print(f'  {RCODE_response_code=} ({RCODE[RCODE_LOOKUP[RCODE_response_code]]})')
+        print(f'  {QDCOUNT_questions_count=}')
+        print(f'  {ANCOUNT_answers_count=}')
+        print(f'  {NSCOUNT_authoritative_answers_count=}')
+        print(f'  {ARCOUNT_additional_records_count=}')
         names = {}
         offset = 12
         question_label_list = []
@@ -46,7 +48,7 @@ class DNSServerProtocol:
         answer_info = None
         authority_info = None
         additional_info = None
-        for c in range(questions_count):
+        for c in range(QDCOUNT_questions_count):
             print(f'QUESTION NAME: Starting byte {offset+1}')
             question_label_list = []
             namestart = offset
@@ -59,10 +61,10 @@ class DNSServerProtocol:
             offset = offset + 1
             print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
             qtype, qclass = question.unpack(data[offset:offset+4])
-            print(f'  {qtype=}')
+            print(f'  {qtype=} ({RR_TYPE[RR_TYPE_LOOKUP[qtype]]})')
             print(f'  {qclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[qclass]]})')
             offset = offset + 4
-        for c in range(answers_count):
+        for c in range(ANCOUNT_answers_count):
             print(f'ANSWER NAME: Starting byte {offset+1}')
             answer_label_list = []
             namestart = offset
@@ -78,12 +80,12 @@ class DNSServerProtocol:
             offset = offset + 1
             print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
             atype, aclass, attl, alength = answer.unpack(data[offset:offset+10])
-            print(f'  {atype=}')
+            print(f'  {atype=} ({RR_TYPE[RR_TYPE_LOOKUP[atype]]})')
             print(f'  {aclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[aclass]]})')
             print(f'  {attl=}')
             print(f'  {alength=}')
             offset = offset + 10 + alength
-        for c in range(authoritative_answers_count):
+        for c in range(NSCOUNT_authoritative_answers_count):
             print(f'AUTHORITY NAME: Starting byte {offset+1}')
             authority_label_list = []
             namestart = offset
@@ -99,12 +101,12 @@ class DNSServerProtocol:
             offset = offset + 1
             print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
             ntype, nclass, nttl, nlength = answer.unpack(data[offset:offset+10])
-            print(f'  {ntype=}')
+            print(f'  {ntype=} ({RR_TYPE[RR_TYPE_LOOKUP[ntype]]})')
             print(f'  {nclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[nclass]]})')
             print(f'  {nttl=}')
             print(f'  {nlength=}')
             offset = offset + 10 + nlength
-        for c in range(additional_records_count):
+        for c in range(ARCOUNT_additional_records_count):
             print(f'ADDITIONAL NAME: Starting byte {offset+1}')
             additional_label_list = []
             namestart = offset
@@ -120,21 +122,22 @@ class DNSServerProtocol:
             offset = offset + 1
             print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
             xtype, xclass, xttl, xlength = answer.unpack(data[offset:offset+10])
-            print(f'  {xtype=}')
+            print(f'  {xtype=} ({RR_TYPE[RR_TYPE_LOOKUP[xtype]]})')
+            print(f'  {xlength=}')
             if xtype == 41:
                 print(f'OPT EDNS')
-                xrcode, version, do = opt.unpack(data[offset+4:offset+8])
+                xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt.unpack(data[offset+4:offset+8])
+                OPT_XRCODE = xrcode << 4 | RCODE_response_code
                 udp_payload_size = xclass
                 print(f'  {udp_payload_size=}')
                 print(f'  {xrcode=}')
-                print(f'  {version=}')
-                print(f'  {do=}')
+                print(f'  {EDNS_version=}')
+                print(f'  {DO_DNSSEC_Answer_OK=}')
             else:
                 print(f'  {xclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[xclass]]})')
                 print(f'  {xttl=}')
-            print(f'  {xlength=}')
             offset = offset + 10 + xlength
-        print(f'No byte {offset+1}')
+        print(f'Processed {offset} bytes')
 
         print(f'NAMES: {names}' )
         print(f'Sending data to {addr}')

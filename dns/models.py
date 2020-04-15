@@ -18,6 +18,7 @@ SOURCE_CHOICES = (
 SOURCE_LOOKUP_DICT = dict(tuple((i[1].lower(),i[0]) for i in SOURCE_CHOICES))
 
 # Create your models here.
+
 class Domain(models.Model):
     owner = models.ForeignKey(
         User,
@@ -200,7 +201,7 @@ class SOA_Record(models.Model):
     expiry = models.IntegerField(
         verbose_name=_("Expiration Time"),
         default=1209600)
-    nxttl = models.IntegerField(
+    nx = models.IntegerField(
         verbose_name=_("Negative Caching Time"),
         default=180)
     serial = models.IntegerField(
