@@ -1,13 +1,17 @@
 import asyncio
+
+from django.conf import settings
+
+import hexdump
+import asyncpg
 #import struct
 #import bitstruct
 #import bitstruct.c as bitstruct
 import cbitstruct as bitstruct
-import hexdump
-import asyncpg
 
 from .codes import *
 from dns.models import A_Record, Domain
+
 
 header = bitstruct.compile(header_format)
 question = bitstruct.compile(question_format)
@@ -16,9 +20,11 @@ opt = bitstruct.compile(opt_format)
 
 #header_format = '!H2B4H'
 class DNSServerProtocol:
+    def __init__(self, pool, *args, **kwargs):
+        self.pool = pool
+    
     def connection_made(self, transport):
         self.transport = transport
-
 
     def datagram_received(self, data, addr):
 #        message = data.decode()
@@ -169,6 +175,12 @@ class DNSServerProtocol:
                 hostname = query[0][0]
                 domainname = ".".join(query[0][1:])
                 print(f'A Record IN Query {hostname=}')
+                con = await pool.acquire()
+                try:
+                    domain = await connection.fetchval('select id from dns_domain where name=$1;', domainname)
+                    record = await connection.fetchval('select id from dns_a_record where domain_id=$1 and ;', domainname)
+                finally:
+                    await pool.release(con)
                 domain = Domain.objects.get(name=hostname)
                 record = A_Record.objects.get(name=hostname,domain=domain)
                 print(record)
@@ -183,14 +195,23 @@ class DNSServerProtocol:
 async def DNSServer(ip_address='127.0.0.1', port=53):
     print("Starting UDP server")
 
+    db_name = settings.DATABASES['default']['NAME']
+    db_user = settings.DATABASES['default']['USER']
+    db_password = settings.DATABASES['default']['PASSWORD']
+    db_host = settings.DATABASES['default']['HOST']
+    db_port = settings.DATABASES['default']['PORT']
+    dsn = f'postgres://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+
     # Get a reference to the event loop as we plan to use
     # low-level APIs.
     loop = asyncio.get_running_loop()
+    pool = await asyncpg.create_pool(dsn,loop=loop)
+    print(pool)
 
     # One protocol instance will be created to serve all
     # client requests.
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DNSServerProtocol(),
+        lambda: DNSServerProtocol(pool),
         local_addr=(ip_address, port))
 #        local_addr=('127.0.0.1', 9999))
 
