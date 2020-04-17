@@ -178,7 +178,7 @@ class DNSServerProtocol:
                 con = await pool.acquire()
                 try:
                     domain = await connection.fetchval('select id from dns_domain where name=$1;', domainname)
-                    record = await connection.fetchval('select id from dns_a_record where domain_id=$1 and ;', domainname)
+                    record = await connection.fetchval('select id from dns_a_record where domain_id=$1 and name=$2;', domain, hostname)
                 finally:
                     await pool.release(con)
                 domain = Domain.objects.get(name=hostname)
