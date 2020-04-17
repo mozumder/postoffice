@@ -20,11 +20,23 @@ opt = bitstruct.compile(opt_format)
 
 #header_format = '!H2B4H'
 class DNSServerProtocol:
-    def __init__(self, pool, *args, **kwargs):
-        self.pool = pool
+    def __init__(self, conn, *args, **kwargs):
+        self.conn = conn
     
     def connection_made(self, transport):
         self.transport = transport
+        print(f'Created UDP connection with {transport=}')
+
+    async def get_record(self, queries):
+        for query in queries:
+            if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:
+                hostname = query[0][0]
+                domainname = ".".join(query[0][1:])
+                print(f'A Record IN Query {hostname=}')
+                domain = await self.conn.fetch('select id from dns_domain where name=$1;', domainname)
+                record = await self.conn.fetch('select id from dns_a_record where domain_id=$1 and name=$2;', domain, hostname)
+                return record
+
 
     def datagram_received(self, data, addr):
 #        message = data.decode()
@@ -169,23 +181,9 @@ class DNSServerProtocol:
             print(f'  DO_DNSSEC_Answer_OK={record[3]}')
             print(f'  length={record[4]}')
 
-
-        for query in queries:
-            if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:
-                hostname = query[0][0]
-                domainname = ".".join(query[0][1:])
-                print(f'A Record IN Query {hostname=}')
-                con = await pool.acquire()
-                try:
-                    domain = await connection.fetchval('select id from dns_domain where name=$1;', domainname)
-                    record = await connection.fetchval('select id from dns_a_record where domain_id=$1 and name=$2;', domain, hostname)
-                finally:
-                    await pool.release(con)
-                domain = Domain.objects.get(name=hostname)
-                record = A_Record.objects.get(name=hostname,domain=domain)
-                print(record)
-                
-
+        results = self.get_record(queries)
+        asyncio.get_event_loop().create_task(results)
+        print(results)
 
         print(f'Processed {offset} bytes')
         print(f'NAMES: {names}' )
@@ -205,13 +203,14 @@ async def DNSServer(ip_address='127.0.0.1', port=53):
     # Get a reference to the event loop as we plan to use
     # low-level APIs.
     loop = asyncio.get_running_loop()
-    pool = await asyncpg.create_pool(dsn,loop=loop)
-    print(pool)
+    #pool = await asyncpg.create_pool(dsn,loop=loop)
+    #print(pool)
+    conn = await asyncpg.connect(dsn)
 
     # One protocol instance will be created to serve all
     # client requests.
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DNSServerProtocol(pool),
+        lambda: DNSServerProtocol(conn),
         local_addr=(ip_address, port))
 #        local_addr=('127.0.0.1', 9999))
 
