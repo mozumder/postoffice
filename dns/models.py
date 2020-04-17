@@ -262,6 +262,9 @@ class A_Record(models.Model):
         verbose_name=_("Host"),
         null=True, blank=True,
         on_delete=models.CASCADE)
+    roundrobin = models.BooleanField(
+        verbose_name=_("Next Round Robin"),
+        default=False)
     dynamic_ip = models.BooleanField(
         verbose_name=_("Dynamic IP"),
         default=False)
