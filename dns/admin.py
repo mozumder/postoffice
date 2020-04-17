@@ -96,7 +96,7 @@ class A_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'name', 'ip_address', 'ttl', 'dynamic_ip', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'name', 'ip_address', 'ttl', 'roundrobin', 'dynamic_ip', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     list_editable = ['dynamic_ip',]
     search_fields = ['name']
@@ -106,6 +106,7 @@ class A_RecordAdmin(admin.ModelAdmin):
             ('name'),
             ('ip_address'),
             ('dynamic_ip'),
+            ('roundrobin'),
             ('host'),
             ('ttl'),
             ('serial'),

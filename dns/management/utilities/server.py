@@ -4,8 +4,10 @@ import asyncio
 #import bitstruct.c as bitstruct
 import cbitstruct as bitstruct
 import hexdump
+import asyncpg
 
 from .codes import *
+from dns.models import A_Record, Domain
 
 header = bitstruct.compile(header_format)
 question = bitstruct.compile(question_format)
@@ -48,21 +50,25 @@ class DNSServerProtocol:
         answer_info = None
         authority_info = None
         additional_info = None
+        queries = []
+        answers = []
+        authorities = []
+        additionals = []
+        options = []
         for c in range(QDCOUNT_questions_count):
             print(f'QUESTION NAME: Starting byte {offset+1}')
             question_label_list = []
             namestart = offset
             while data[offset] != 0:
                 if data[offset] & 192 == 0:
-                    question_label_list.append(data[offset+1:offset+1+data[offset]])
+                    question_label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
                     offset = offset + data[offset] + 1
+            print(f'{question_label_list=}')
             names[namestart] = question_label_list
-            print(f'  {question_label_list=}')
             offset = offset + 1
             print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
             qtype, qclass = question.unpack(data[offset:offset+4])
-            print(f'  {qtype=} ({RR_TYPE[RR_TYPE_LOOKUP[qtype]]})')
-            print(f'  {qclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[qclass]]})')
+            queries.append((question_label_list, qtype, qclass))
             offset = offset + 4
         for c in range(ANCOUNT_answers_count):
             print(f'ANSWER NAME: Starting byte {offset+1}')
@@ -70,20 +76,16 @@ class DNSServerProtocol:
             namestart = offset
             while data[offset] != 0 or data[offset]:
                 if data[offset] & 192 == 0:
-                    label_list.append(data[offset+1:offset+1+data[offset]])
+                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
                     offset = offset + data[offset] + 1
             if data[offset] & 192 == 192:
                 answer_label_list = names[data[offset] & 63]
             if answer_label_list:
                 names[namestart] = answer_label_list
-            print(f'  {answer_label_list=}')
             offset = offset + 1
             print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
             atype, aclass, attl, alength = answer.unpack(data[offset:offset+10])
-            print(f'  {atype=} ({RR_TYPE[RR_TYPE_LOOKUP[atype]]})')
-            print(f'  {aclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[aclass]]})')
-            print(f'  {attl=}')
-            print(f'  {alength=}')
+            answers.append((answer_label_list, atype, aclass, attl, alength, data[offset+10:offset+10+alength]))
             offset = offset + 10 + alength
         for c in range(NSCOUNT_authoritative_answers_count):
             print(f'AUTHORITY NAME: Starting byte {offset+1}')
@@ -91,20 +93,16 @@ class DNSServerProtocol:
             namestart = offset
             while data[offset] != 0:
                 if data[offset] & 192 == 0:
-                    label_list.append(data[offset+1:offset+1+data[offset]])
+                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
                     offset = offset + data[offset] + 1
             if data[offset] & 192 == 192:
                 authority_label_list = names[data[offset] & 63]
             if authority_label_list:
                 names[namestart] = authority_label_list
-            print(f'  {authority_label_list=}')
             offset = offset + 1
             print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
             ntype, nclass, nttl, nlength = answer.unpack(data[offset:offset+10])
-            print(f'  {ntype=} ({RR_TYPE[RR_TYPE_LOOKUP[ntype]]})')
-            print(f'  {nclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[nclass]]})')
-            print(f'  {nttl=}')
-            print(f'  {nlength=}')
+            authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
             offset = offset + 10 + nlength
         for c in range(ARCOUNT_additional_records_count):
             print(f'ADDITIONAL NAME: Starting byte {offset+1}')
@@ -112,37 +110,75 @@ class DNSServerProtocol:
             namestart = offset
             while data[offset] != 0:
                 if data[offset] & 192 == 0:
-                    label_list.append(data[offset+1:offset+1+data[offset]])
+                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
                     offset = offset + data[offset] + 1
             if data[offset] & 192 == 192:
                 additional_label_list = names[data[offset] & 63]
             if additional_label_list:
                 names[namestart] = additional_label_list
-            print(f'  {additional_label_list=}')
             offset = offset + 1
             print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
             xtype, xclass, xttl, xlength = answer.unpack(data[offset:offset+10])
-            print(f'  {xtype=} ({RR_TYPE[RR_TYPE_LOOKUP[xtype]]})')
-            print(f'  {xlength=}')
-            if xtype == 41:
-                print(f'OPT EDNS')
-                xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt.unpack(data[offset+4:offset+8])
-                OPT_XRCODE = xrcode << 4 | RCODE_response_code
-                udp_payload_size = xclass
-                print(f'  {udp_payload_size=}')
-                print(f'  {xrcode=}')
-                print(f'  {EDNS_version=}')
-                print(f'  {DO_DNSSEC_Answer_OK=}')
-            else:
-                print(f'  {xclass=} ({DNS_CLASS[DNS_CLASS_LOOKUP[xclass]]})')
-                print(f'  {xttl=}')
+            additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
             offset = offset + 10 + xlength
-        print(f'Processed {offset} bytes')
 
+        for record in additionals:
+            if record[1] == 41:
+                print(f'OPT EDNS')
+                xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt.unpack(record[4])
+                OPT_XRCODE = xrcode << 4 | RCODE_response_code
+                options.append((record[2],OPT_XRCODE,EDNS_version,DO_DNSSEC_Answer_OK,record[5],data))
+
+        for record in queries:
+            print(f'QUERY:')
+            print(f'  label={record[0]}')
+            print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+        for record in answers:
+            print(f'ANSWER')
+            print(f'  label={record[0]}')
+            print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+            print(f'  ttl={record[3]}')
+            print(f'  data_length= {record[4]}')
+        for record in authorities:
+            print(f'AUTHORITY')
+            print(f'  label={record[0]}')
+            print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+            print(f'  ttl={record[3]}')
+            print(f'  data_length= {record[4]}')
+        for record in additionals:
+            print(f'ADDITIONAL')
+            print(f'  label={record[0]}')
+            print(f'  type=={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+            print(f'  ttl={record[3]}')
+            print(f'  data_length={record[5]}')
+        for record in options:
+            print(f'OPTIONS')
+            print(f'  udp_payload_size={record[0]}')
+            print(f'  OPT_XRCODE={record[1]}')
+            print(f'  EDNS_version={record[2]}')
+            print(f'  DO_DNSSEC_Answer_OK={record[3]}')
+            print(f'  length={record[4]}')
+
+
+        for query in queries:
+            if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:
+                hostname = query[0][0]
+                domainname = ".".join(query[0][1:])
+                print(f'A Record IN Query {hostname=}')
+                domain = Domain.objects.get(name=hostname)
+                record = A_Record.objects.get(name=hostname,domain=domain)
+                print(record)
+                
+
+
+        print(f'Processed {offset} bytes')
         print(f'NAMES: {names}' )
         print(f'Sending data to {addr}')
         self.transport.sendto(data, addr)
-
 
 async def DNSServer(ip_address='127.0.0.1', port=53):
     print("Starting UDP server")
