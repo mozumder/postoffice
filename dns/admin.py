@@ -104,6 +104,7 @@ class A_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('ip_address'),
             ('dynamic_ip'),
             ('roundrobin'),
@@ -140,6 +141,7 @@ class AAAA_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('ip_address'),
             ('host'),
             ('ttl'),
@@ -174,6 +176,7 @@ class CNAME_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('alias'),
             ('alias_host'),
             ('ttl'),
@@ -208,6 +211,7 @@ class MX_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('server'),
             ('server_host'),
             ('ttl'),
@@ -242,6 +246,7 @@ class TXT_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('value'),
             ('ttl'),
             ('serial'),
@@ -275,6 +280,7 @@ class PTR_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('system'),
             ('system_host'),
             ('ttl'),
@@ -309,6 +315,7 @@ class NS_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('delegate'),
             ('delegate_host'),
             ('ttl'),
@@ -343,6 +350,7 @@ class SRV_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('priority'),
             ('weight'),
             ('port'),
@@ -381,6 +389,7 @@ class CAA_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
+            ('fqdn'),
             ('type'),
             ('value'),
             ('issuer_critical'),

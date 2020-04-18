@@ -88,6 +88,8 @@ class Command(BaseCommand):
 #        print(options)
         if options['name'] == None:
             raise CommandError("Need a Domain Name.")
+        else:
+            domainname = options['name']
         if options['ip_address'] == None:
             raise CommandError("Need an IP Address.")
         if options['name_server'] == None:
@@ -103,7 +105,7 @@ class Command(BaseCommand):
         else:
             email = options['email']
 
-        d, d_created = Domain.objects.get_or_create(owner=user,name=options['name'])
+        d, d_created = Domain.objects.get_or_create(owner=user,name=domainname)
         d.save()
         if d_created:
             print(f'Created domain {d} with owner {d.owner}.')
@@ -112,8 +114,10 @@ class Command(BaseCommand):
 
         a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None, ip_address=options['ip_address'])
         a_record.host = None
+        a_record.fqdn = domainname
         a_record.ttl = options['default_ttl']
         a_record.dynamic_ip = options['dynamic_ip']
+        a_record.source = SOURCE_SCRIPT
         a_record.save()
         if a_created:
             print(f'Created A Record {a_record} under domain {d}.')
@@ -131,6 +135,7 @@ class Command(BaseCommand):
         soa_record.serial = 0
         soa_record.expiry = options['expiry']
         soa_record.nx = options['nxdomain']
+        soa_record.source = SOURCE_SCRIPT
         soa_record.save()
         if soa_created:
             print(f'Created SOA Record {soa_record} under domain {d}.')
@@ -140,6 +145,8 @@ class Command(BaseCommand):
         for ns in options['name_server']:
             ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,name=ns)
             ns_record.ttl = options['default_ttl']
+            ns_record.fqdn = domainname
+            ns_record.source = SOURCE_SCRIPT
             ns_record.save()
             if ns_created:
                 print(f'Created NS Record {ns_record} under domain {d}.')
