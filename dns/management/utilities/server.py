@@ -1,4 +1,6 @@
 import asyncio
+from threading import Thread
+from queue import Queue
 
 from django.conf import settings
 
@@ -20,23 +22,12 @@ opt = bitstruct.compile(opt_format)
 
 #header_format = '!H2B4H'
 class DNSServerProtocol:
-    def __init__(self, conn, *args, **kwargs):
-        self.conn = conn
-    
+    def __init__(self, q):
+        self.q = q
+
     def connection_made(self, transport):
         self.transport = transport
-        print(f'Created UDP connection with {transport=}')
-
-    async def get_record(self, queries):
-        for query in queries:
-            if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:
-                hostname = query[0][0]
-                domainname = ".".join(query[0][1:])
-                print(f'A Record IN Query {hostname=}')
-                domain = await self.conn.fetch('select id from dns_domain where name=$1;', domainname)
-                record = await self.conn.fetch('select id from dns_a_record where domain_id=$1 and name=$2;', domain, hostname)
-                return record
-
+#        print(f'Created UDP connection with {transport=}')
 
     def datagram_received(self, data, addr):
 #        message = data.decode()
@@ -180,18 +171,67 @@ class DNSServerProtocol:
             print(f'  EDNS_version={record[2]}')
             print(f'  DO_DNSSEC_Answer_OK={record[3]}')
             print(f'  length={record[4]}')
+            
+        for query in queries:
+            print('calling db response')
+            self.q.put(query)
 
-        results = self.get_record(queries)
-        asyncio.get_event_loop().create_task(results)
-        print(results)
+    async def respond(self, query):
+        result = await self.responder(query)
+        return result
 
-        print(f'Processed {offset} bytes')
-        print(f'NAMES: {names}' )
-        print(f'Sending data to {addr}')
-        self.transport.sendto(data, addr)
+async def UDPListener(db_loop, ip_address='127.0.0.1', port=53):
+#    print("Starting DNS UDP Server")
+    
+    # Get a reference to the event loop as we plan to use
+    # low-level APIs.
+    loop = asyncio.get_running_loop()
 
-async def DNSServer(ip_address='127.0.0.1', port=53):
-    print("Starting UDP server")
+    # One protocol instance will be created to serve all
+    # client requests.
+    transport, protocol = await loop.create_datagram_endpoint(
+        lambda: DNSServerProtocol(db_loop),
+        local_addr=(ip_address, port))
+    #        local_addr=('127.0.0.1', 9999))
+
+    try:
+        await asyncio.sleep(3600)  # Serve for 1 hour.
+    finally:
+        transport.close()
+        
+async def responder(db_pool, query):
+    print(f'Got query: {query=}')
+    record = None
+    if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:
+        hostname = query[0][0]
+        domainname = ".".join(query[0][1:])
+        print(f'{hostname=}')
+        print(f'{domainname=}')
+        print(f'A Record IN Query {hostname=}')
+        con = await db_pool.acquire()
+        # Open a transaction.
+        domain = await con.fetchval('select id from dns_domain where name=$1;', domainname)
+        print(f'{domain=}')
+        record = await con.fetchval("select id from dns_a_record where domain_id=$1 and name=$2;", domain, hostname)
+        print(f'{record=}')
+        await db_pool.release(con)
+    return record
+
+async def response_queue(db_pool, q):
+    query = q.get()
+    result = await responder(db_pool, query)
+    print(result)
+
+async def DBConnecter(db_pool_fut, q):
+    db_pool = await db_pool_fut
+    while True:
+        result = await response_queue(db_pool,q)
+
+async def DBConnect_Init(conn):
+    print('Connecting')
+
+def RunDBThread(q):
+    print(f'Starting DB Thread')
 
     db_name = settings.DATABASES['default']['NAME']
     db_user = settings.DATABASES['default']['USER']
@@ -200,23 +240,17 @@ async def DNSServer(ip_address='127.0.0.1', port=53):
     db_port = settings.DATABASES['default']['PORT']
     dsn = f'postgres://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
 
-    # Get a reference to the event loop as we plan to use
-    # low-level APIs.
-    loop = asyncio.get_running_loop()
-    #pool = await asyncpg.create_pool(dsn,loop=loop)
-    #print(pool)
-    conn = await asyncpg.connect(dsn)
+    db_loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(db_loop)
+    db_pool_fut = asyncpg.create_pool(dsn,init=DBConnect_Init)
+    db_loop.run_until_complete(DBConnecter(db_pool_fut,q))
 
-    # One protocol instance will be created to serve all
-    # client requests.
-    transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DNSServerProtocol(conn),
-        local_addr=(ip_address, port))
-#        local_addr=('127.0.0.1', 9999))
+def RunDNSServer(ip_address, port):
+    q = Queue()
+    thread = Thread(target=RunDBThread, args=(q,), daemon=True)
+    thread.start()
 
-    try:
-        await asyncio.sleep(3600)  # Serve for 1 hour.
-    finally:
-        transport.close()
+    while True:
+        asyncio.run(UDPListener(q, ip_address, port))
 
 
