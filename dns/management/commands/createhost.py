@@ -4,7 +4,7 @@ Create Host
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from dns.models import Host, Domain, A_Record
+from dns.models import Host, Domain, A_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
     help = ("Create a host under a domain")
@@ -48,10 +48,14 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['domain'] == None:
             raise CommandError("Need a Domain Name.")
+        else:
+            domainname = options['domain']
         if options['ip_address'] == None:
             raise CommandError("Need an IP Address.")
         if options['host'] == None:
             print("Using blank host name.")
+            
+        fqdn = options['host'] + "." + domainname
 
         try:
             domain = Domain.objects.get(name=options['domain'])
@@ -67,8 +71,10 @@ class Command(BaseCommand):
 
         a_record, a_created = A_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ip_address'])
         a_record.host = h
+        a_record.fqdn = fqdn
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
+        a_record.source = SOURCE_SCRIPT
         a_record.save()
         if a_created:
             print(f'Created A Record {a_record} under domain {domain} with host {h}.')

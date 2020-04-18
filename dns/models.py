@@ -210,7 +210,8 @@ class SOA_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -254,6 +255,10 @@ class A_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     ip_address = models.GenericIPAddressField(
         verbose_name=_("IP Address"),
         db_index=True)
@@ -277,7 +282,8 @@ class A_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -323,6 +329,10 @@ class AAAA_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     ip_address = models.GenericIPAddressField(
         verbose_name=_("IP Address"),
         db_index=True)
@@ -340,7 +350,8 @@ class AAAA_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -385,6 +396,10 @@ class CNAME_Record(models.Model):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     alias = models.CharField(
         #If the value ends in a dot, it is for an external domain.
         verbose_name=_("Name"),
@@ -403,7 +418,8 @@ class CNAME_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -446,6 +462,10 @@ class MX_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     server = models.CharField(
         #If the value ends in a dot, it is for an outside domain.
         verbose_name=_("Server"),
@@ -465,7 +485,8 @@ class MX_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -511,6 +532,10 @@ class TXT_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     value = models.CharField(
         verbose_name=_("Value"),
         max_length=1024,
@@ -524,7 +549,8 @@ class TXT_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -558,6 +584,10 @@ class PTR_Record(models.Model):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     system = models.CharField(
         #If the value ends in a dot, it is for an external domain.
         verbose_name=_("System"),
@@ -576,7 +606,8 @@ class PTR_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -618,6 +649,10 @@ class NS_Record(models.Model):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     delegate = models.CharField(
         #If the value ends in a dot, it is for an external domain.
         verbose_name=_("Delegate"),
@@ -636,7 +671,8 @@ class NS_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -679,6 +715,10 @@ class SRV_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
     priority = models.IntegerField(
         verbose_name=_("Priority"))
     weight = models.IntegerField(
@@ -703,7 +743,8 @@ class SRV_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -756,6 +797,10 @@ class CAA_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
+    fqdn = models.CharField(
+        verbose_name=_("Fully Qualified Domain Name"),
+        max_length=150,
+        null=True, blank=True)
 #    provider = models.CharField(
 #        _("Provider"),
 #        max_length=1,
@@ -781,7 +826,8 @@ class CAA_Record(models.Model):
     source = models.CharField(
         _("Source"),
         max_length=1,
-        choices=SOURCE_CHOICES)
+        choices=SOURCE_CHOICES,
+        default=SOURCE_ADMIN)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)

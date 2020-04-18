@@ -172,9 +172,12 @@ class DNSServerProtocol:
             print(f'  DO_DNSSEC_Answer_OK={record[3]}')
             print(f'  length={record[4]}')
             
+        loop = asyncio.get_running_loop()
         for query in queries:
             print('calling db response')
-            self.q.put(query)
+#            self.q.put(query)
+            
+            asyncio.ensure_future(DBConnecter(None,query))
 
     async def respond(self, query):
         result = await self.responder(query)
@@ -212,7 +215,7 @@ async def responder(db_pool, query):
         # Open a transaction.
         domain = await con.fetchval('select id from dns_domain where name=$1;', domainname)
         print(f'{domain=}')
-        record = await con.fetchval("select id from dns_a_record where domain_id=$1 and name=$2;", domain, hostname)
+        record = await con.fetchval('select id from dns_a_record where domain_id=$1 and fqdn=$2;', domain, hostname)
         print(f'{record=}')
         await db_pool.release(con)
     return record
