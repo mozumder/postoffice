@@ -6,7 +6,7 @@ import asyncio
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from dns.management.utilities import DNSServer
+from dns.management.utilities import RunDNSServer
 
 class Command(BaseCommand):
 
@@ -31,6 +31,4 @@ class Command(BaseCommand):
         if options['port'] == None:
             raise CommandError("Need a port.")
 
-        while True:
-            asyncio.run(DNSServer(options['ip_address'], options['port']))
-
+        RunDNSServer(options['ip_address'], options['port'])
