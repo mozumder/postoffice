@@ -216,10 +216,7 @@ class SOA_Record(models.Model):
         verbose_name=_("Date Updated"),
         auto_now=True)
     def __str__(self):
-        if self.host:
-            return f'{self.name}.{self.domain.name}'
-        else:
-            return f'.{self.domain.name}'
+        return f'{self.origin}'
     def domain_name(self):
         names = self.name.split(".")[1:]
         tld = names[-1]
