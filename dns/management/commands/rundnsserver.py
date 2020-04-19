@@ -6,7 +6,7 @@ import asyncio
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from dns.management.utilities import RunDNSServer
+from dns.utilities.server import RunDNSServer
 
 class Command(BaseCommand):
 
