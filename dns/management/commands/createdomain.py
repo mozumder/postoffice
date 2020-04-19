@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from dns.models import Domain, A_Record, SOA_Record, NS_Record
+from dns.models import Domain, A_Record, SOA_Record, NS_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
     help = ("Create a domain with username as its owner")
