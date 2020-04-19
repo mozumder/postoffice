@@ -22,8 +22,8 @@ opt = bitstruct.compile(opt_format)
 
 #header_format = '!H2B4H'
 class DNSServerProtocol:
-    def __init__(self, q):
-        self.q = q
+    def __init__(self, db_pool):
+        self.db_pool = db_pool
 
     def connection_made(self, transport):
         self.transport = transport
@@ -177,23 +177,34 @@ class DNSServerProtocol:
             print('calling db response')
 #            self.q.put(query)
             
-            asyncio.ensure_future(DBConnecter(None,query))
+            result = asyncio.ensure_future(responder(self.db_pool,query))
+            print(result)
 
     async def respond(self, query):
         result = await self.responder(query)
         return result
 
-async def UDPListener(db_loop, ip_address='127.0.0.1', port=53):
+async def UDPListener(ip_address='127.0.0.1', port=53):
+    db_name = settings.DATABASES['default']['NAME']
+    db_user = settings.DATABASES['default']['USER']
+    db_password = settings.DATABASES['default']['PASSWORD']
+    db_host = settings.DATABASES['default']['HOST']
+    db_port = settings.DATABASES['default']['PORT']
+    dsn = f'postgres://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
+
+    loop = asyncio.get_running_loop()
+    db_pool = await asyncpg.create_pool(dsn,init=DBConnect_Init)
+
 #    print("Starting DNS UDP Server")
     
     # Get a reference to the event loop as we plan to use
     # low-level APIs.
-    loop = asyncio.get_running_loop()
+#    loop = asyncio.get_running_loop()
 
     # One protocol instance will be created to serve all
     # client requests.
     transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DNSServerProtocol(db_loop),
+        lambda: DNSServerProtocol(db_pool),
         local_addr=(ip_address, port))
     #        local_addr=('127.0.0.1', 9999))
 
@@ -208,14 +219,15 @@ async def responder(db_pool, query):
     if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:
         hostname = query[0][0]
         domainname = ".".join(query[0][1:])
+        fqdn = ".".join(query[0])
         print(f'{hostname=}')
         print(f'{domainname=}')
         print(f'A Record IN Query {hostname=}')
         con = await db_pool.acquire()
         # Open a transaction.
-        domain = await con.fetchval('select id from dns_domain where name=$1;', domainname)
+        domain = await con.fetchval('select id from dns_domain where name=$1 or name=$2;', domainname,fqdn)
         print(f'{domain=}')
-        record = await con.fetchval('select id from dns_a_record where domain_id=$1 and fqdn=$2;', domain, hostname)
+        record = await con.fetchval('select id from dns_a_record where domain_id=$1 and fqdn=$2;', domain, fqdn)
         print(f'{record=}')
         await db_pool.release(con)
     return record
@@ -249,11 +261,11 @@ def RunDBThread(q):
     db_loop.run_until_complete(DBConnecter(db_pool_fut,q))
 
 def RunDNSServer(ip_address, port):
-    q = Queue()
-    thread = Thread(target=RunDBThread, args=(q,), daemon=True)
-    thread.start()
+#    q = Queue()
+#    thread = Thread(target=RunDBThread, args=(q,), daemon=True)
+#    thread.start()
 
     while True:
-        asyncio.run(UDPListener(q, ip_address, port))
+        asyncio.run(UDPListener(ip_address, port))
 
 
