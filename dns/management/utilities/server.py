@@ -230,7 +230,7 @@ async def responder(db_pool, query):
         record = await con.fetchval('select id from dns_a_record where domain_id=$1 and fqdn=$2;', domain, fqdn)
         print(f'{record=}')
         await db_pool.release(con)
-    return record
+        
 
 async def response_queue(db_pool, q):
     query = q.get()
