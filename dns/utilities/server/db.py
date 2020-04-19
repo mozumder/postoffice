@@ -1,6 +1,6 @@
 from .codes import *
 
-async def lookup(db_pool, query):
+async def db_lookup(db_pool, query):
     print(f'Got query: naem={query[0]}, type={RR_TYPE[RR_TYPE_LOOKUP[query[1]]]}, class={DNS_CLASS[DNS_CLASS_LOOKUP[query[2]]]}')
     results = []
     if query[1] == RR_TYPE_A and [query[2] == DNS_CLASS_INTERNET]:

@@ -1,8 +1,10 @@
 import asyncio
+import functools
+import operator
 
 import hexdump
 import cbitstruct as bitstruct
-from .db import lookup
+from .db import db_lookup
 from .codes import *
 from dns.models import A_Record, Domain
 
@@ -154,8 +156,8 @@ async def Query(pool, data, addr, transport):
         print(f'  DO_DNSSEC_Answer_OK={record[3]}')
         print(f'  length={record[4]}')
     
-    tasks =  [lookup(pool,query) for query in queries]
-    results = await asyncio.gather(*tasks)
+    tasks =  [db_lookup(pool,query) for query in queries]
+    results = functools.reduce(operator.iconcat, await asyncio.gather(*tasks), [])
     print(results)
 
 async def respond(self, query):
