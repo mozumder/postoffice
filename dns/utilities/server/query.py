@@ -12,10 +12,10 @@ header_struct = bitstruct.compile(header_format)
 question_struct = bitstruct.compile(question_format)
 answer_struct = bitstruct.compile(answer_format)
 opt_struct = bitstruct.compile(opt_format)
+label_struct = bitstruct.compile(label_format)
 
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
-    print(f'Got datagram from {addr} with length {len(data)}')
     hexdump.hexdump(data)
     print(f'HEADER: Starting byte 1')
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
@@ -61,7 +61,7 @@ async def Query(pool, data, addr, transport):
         offset = offset + 1
         print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
         qtype, qclass = question_struct.unpack(data[offset:offset+4])
-        queries.append((question_label_list, qtype, qclass, data[namestart:offset]))
+        queries.append((qtype, qclass, data[namestart:offset], question_label_list))
         offset = offset + 4
     for c in range(ANCOUNT_answers_count):
         print(f'ANSWER NAME: Starting byte {offset+1}')
@@ -124,9 +124,9 @@ async def Query(pool, data, addr, transport):
 
     for record in queries:
         print(f'QUERY:')
-        print(f'  label={record[0]}')
-        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+        print(f'  label={record[2]}')
+        print(f'  type={record[0]} ({RR_TYPE[RR_TYPE_LOOKUP[record[0]]]})')
+        print(f'  class={record[1]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[1]]]})')
     for record in answers:
         print(f'ANSWER')
         print(f'  label={record[0]}')
@@ -157,45 +157,49 @@ async def Query(pool, data, addr, transport):
         print(f'  length={record[4]}')
     
     tasks =  [db_lookup(pool,query) for query in queries]
-    results = functools.reduce(operator.iconcat, await asyncio.gather(*tasks), [])
-    questions = []
-    answers = []
-    print(f'{results=}')
+
+    results = await asyncio.gather(*tasks)
+
+    questions_data = []
+    answers_data = []
+
     QR_response = True
     QDCOUNT_questions_count = len(results)
-    ANCOUNT_answers_count = len(results)
     NSCOUNT_authoritative_answers_count = 0
     ARCOUNT_additional_records_count = 0
     RA_recursion_available = True
     AD_authentic_data = False
-    if results == []:
-        AA_authoritative_answer = False
-    else:
-        AA_authoritative_answer = results[0][1][3]
-        for result in results:
-            response_data = b''
-            name = b''
-            for label in result[1][0].split('.'):
-                name = name + len(label).to_bytes(1,'big') + bytes(label,'utf-8')
-            name = name + b'\x00'
-            print(f'{name=}')
-            if result[0] == RR_TYPE_A:
-                RLENGTH = 4
-                RDATA = result[1][2].packed
-            response_data = name + answer_struct.pack(result[0], DNS_CLASS_INTERNET, result[1][1], RLENGTH) + RDATA
-            print(f'{response_data[-4]}.{response_data[-3]}.{response_data[-2]}.{response_data[-1]}')
-            question_data = name + question_struct.pack(result[0], DNS_CLASS_INTERNET)
-            questions.append(question_data)
-            answers.append(response_data)
-            hexdump.hexdump(response_data)
-        print(f'{answers=}')
+    AA_authoritative_answer  = False
+    if OPCODE_operation == OPCODE_QUERY:
+        offset = 12
+        questions = []
+        if len(results) > 0:
+            if len(results[0]) > 0:
+                AA_authoritative_answer = results[0][0][1][3]
+        for i in range(len(queries)):
+            query = queries[i]
+            question = query[2] + question_struct.pack(query[0], query[1])
+            questions_data.append(question)
+            if len(results) > 0:
+                for r in range(len(results[i])):
+                    record = results[i][r]
+                    label = label_struct.pack(offset)
+                    if record[0] == RR_TYPE_A:
+                        RLENGTH = 4
+                        RDATA = record[1][2].packed
+                        print(f'IP Address = {RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
+                    response_data = label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1][1], RLENGTH) + RDATA
+                    answers_data.append(response_data)
+                offset = offset + len(queries[i]) + 4
+
+    ANCOUNT_answers_count = len(answers_data)
     data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
-    for question in questions:
+    for question in questions_data:
         data = data + question
-    for answer in answers:
+    for answer in answers_data:
         data = data + answer
     transport.sendto(data, addr)
-    print(results)
+
 
 async def respond(self, query):
     result = await self.responder(query)
