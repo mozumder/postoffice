@@ -7,11 +7,8 @@ class DNSServerProtocol:
 
     def connection_made(self, transport):
         self.transport = transport
-#        print(f'Created UDP connection with {transport=}')
 
     def datagram_received(self, data, addr):
-#        message = data.decode()
         print(f'Got datagram from {addr} with length {len(data)}')
-        result = asyncio.ensure_future(Query(self.db_pool,data, addr, self.transport))
-        print(result)
+        future = asyncio.ensure_future(Query(self.db_pool,data, addr, self.transport))
 
