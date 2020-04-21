@@ -8,17 +8,17 @@ from .db import db_lookup
 from .codes import *
 from dns.models import A_Record, Domain
 
-header = bitstruct.compile(header_format)
-question = bitstruct.compile(question_format)
-answer = bitstruct.compile(answer_format)
-opt = bitstruct.compile(opt_format)
+header_struct = bitstruct.compile(header_format)
+question_struct = bitstruct.compile(question_format)
+answer_struct = bitstruct.compile(answer_format)
+opt_struct = bitstruct.compile(opt_format)
 
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
     print(f'Got datagram from {addr} with length {len(data)}')
     hexdump.hexdump(data)
     print(f'HEADER: Starting byte 1')
-    ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header.unpack(data)
+    ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
     print(f'  {ID_message_id=}')
     print(f'  {QR_response=}')
     print(f'  {OPCODE_operation=} ({OPCODE[OPCODE_LOOKUP[OPCODE_operation]]})')
@@ -60,8 +60,8 @@ async def Query(pool, data, addr, transport):
         names[namestart] = question_label_list
         offset = offset + 1
         print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
-        qtype, qclass = question.unpack(data[offset:offset+4])
-        queries.append((question_label_list, qtype, qclass))
+        qtype, qclass = question_struct.unpack(data[offset:offset+4])
+        queries.append((question_label_list, qtype, qclass, data[namestart:offset]))
         offset = offset + 4
     for c in range(ANCOUNT_answers_count):
         print(f'ANSWER NAME: Starting byte {offset+1}')
@@ -77,7 +77,7 @@ async def Query(pool, data, addr, transport):
             names[namestart] = answer_label_list
         offset = offset + 1
         print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
-        atype, aclass, attl, alength = answer.unpack(data[offset:offset+10])
+        atype, aclass, attl, alength = answer_struct.unpack(data[offset:offset+10])
         answers.append((answer_label_list, atype, aclass, attl, alength, data[offset+10:offset+10+alength]))
         offset = offset + 10 + alength
     for c in range(NSCOUNT_authoritative_answers_count):
@@ -94,7 +94,7 @@ async def Query(pool, data, addr, transport):
             names[namestart] = authority_label_list
         offset = offset + 1
         print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
-        ntype, nclass, nttl, nlength = answer.unpack(data[offset:offset+10])
+        ntype, nclass, nttl, nlength = answer_struct.unpack(data[offset:offset+10])
         authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
         offset = offset + 10 + nlength
     for c in range(ARCOUNT_additional_records_count):
@@ -111,14 +111,14 @@ async def Query(pool, data, addr, transport):
             names[namestart] = additional_label_list
         offset = offset + 1
         print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
-        xtype, xclass, xttl, xlength = answer.unpack(data[offset:offset+10])
+        xtype, xclass, xttl, xlength = answer_struct.unpack(data[offset:offset+10])
         additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
         offset = offset + 10 + xlength
 
     for record in additionals:
         if record[1] == 41:
             print(f'OPT EDNS')
-            xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt.unpack(record[4])
+            xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt_struct.unpack(record[4])
             OPT_XRCODE = xrcode << 4 | RCODE_response_code
             options.append((record[2],OPT_XRCODE,EDNS_version,DO_DNSSEC_Answer_OK,record[5],data))
 
@@ -158,16 +158,42 @@ async def Query(pool, data, addr, transport):
     
     tasks =  [db_lookup(pool,query) for query in queries]
     results = functools.reduce(operator.iconcat, await asyncio.gather(*tasks), [])
-    if results == []:
-        data = None
-    else:
-        data = 1
-    header_format = '>u16b1u4b1b1b1b1p1b1b1u4u16u16u16u16'
+    questions = []
+    answers = []
+    print(f'{results=}')
     QR_response = True
-    AA_authoritative_answer = True
-    QDCOUNT_questions_count = 0
+    QDCOUNT_questions_count = len(results)
     ANCOUNT_answers_count = len(results)
-    data = header.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
+    NSCOUNT_authoritative_answers_count = 0
+    ARCOUNT_additional_records_count = 0
+    RA_recursion_available = True
+    AD_authentic_data = False
+    if results == []:
+        AA_authoritative_answer = False
+    else:
+        AA_authoritative_answer = results[0][1][3]
+        for result in results:
+            response_data = b''
+            name = b''
+            for label in result[1][0].split('.'):
+                name = name + len(label).to_bytes(1,'big') + bytes(label,'utf-8')
+            name = name + b'\x00'
+            print(f'{name=}')
+            if result[0] == RR_TYPE_A:
+                RLENGTH = 4
+                RDATA = result[1][2].packed
+            response_data = name + answer_struct.pack(result[0], DNS_CLASS_INTERNET, result[1][1], RLENGTH) + RDATA
+            print(f'{response_data[-4]}.{response_data[-3]}.{response_data[-2]}.{response_data[-1]}')
+            question_data = name + question_struct.pack(result[0], DNS_CLASS_INTERNET)
+            questions.append(question_data)
+            answers.append(response_data)
+            hexdump.hexdump(response_data)
+        print(f'{answers=}')
+    data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
+    for question in questions:
+        data = data + question
+    for answer in answers:
+        data = data + answer
     transport.sendto(data, addr)
     print(results)
 

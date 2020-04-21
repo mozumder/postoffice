@@ -4,10 +4,10 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-SOURCE_ADMIN = 0
-SOURCE_SCRIPT = 1
-SOURCE_WEB = 2
-SOURCE_API = 3
+SOURCE_ADMIN = '0'
+SOURCE_SCRIPT = '1'
+SOURCE_WEB = '2'
+SOURCE_API = '3'
 SOURCE_CHOICES = (
     (SOURCE_ADMIN, 'Admin'),
     (SOURCE_SCRIPT, 'Script'),
