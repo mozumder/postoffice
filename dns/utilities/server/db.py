@@ -8,8 +8,8 @@ async def db_lookup(db_pool, query):
         name = ".".join(query[0])
         con = await db_pool.acquire()
         # Open a transaction.
-        domain = await con.fetchval('select id from dns_domain where name=$1 or name=$2;', domainname,name)
-        records = await con.fetch('select ip_address,ttl from dns_a_record where domain_id=$1 and fqdn=$2;', domain, name)
+#        domain = await con.fetchval('select id from dns_domain where name=$1 or name=$2;', domainname,name)
+        records = await con.fetch('select dns_a_record.fqdn, ip_address, ttl, dns_domain.id from dns_a_record left outer join dns_domain on dns_a_record.domain_id = dns_domain.id where dns_a_record.fqdn = $1;', name)
         print(f'{records=}')
         await db_pool.release(con)
         for record in records:

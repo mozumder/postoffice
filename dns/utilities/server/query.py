@@ -158,6 +158,17 @@ async def Query(pool, data, addr, transport):
     
     tasks =  [db_lookup(pool,query) for query in queries]
     results = functools.reduce(operator.iconcat, await asyncio.gather(*tasks), [])
+    if results == []:
+        data = None
+    else:
+        data = 1
+    header_format = '>u16b1u4b1b1b1b1p1b1b1u4u16u16u16u16'
+    QR_response = True
+    AA_authoritative_answer = True
+    QDCOUNT_questions_count = 0
+    ANCOUNT_answers_count = len(results)
+    data = header.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
+    transport.sendto(data, addr)
     print(results)
 
 async def respond(self, query):
