@@ -2,6 +2,7 @@ header_format = '>u16b1u4b1b1b1b1p1b1b1u4u16u16u16u16'
 question_format = '>u16u16'
 answer_format = '>u16u16u32u16'
 label_format = '>P2u14'
+soa_format = '>u32u32u32u32u32'
 opt_format = '>u8u8b1p15'
 
 OPCODE_QUERY=0
