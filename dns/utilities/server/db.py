@@ -9,14 +9,20 @@ async def db_lookup(db_pool, query):
     results = []
     if query[1] == DNS_CLASS_INTERNET:
         if query[0] == RR_TYPE_A:
-            domainname = ".".join(query[3][1:])
-            name = protecc_str(".".join(query[3]))
+            name = protecc_str(".".join(query[3])).lower()
             conn = await db_pool.acquire()
             records = await conn.fetch(f"execute get_a_record('{name}')")
-            print(f'{records=}')
             await db_pool.release(conn)
             for record in records:
-                results.append((RR_TYPE_A,record))
+                results.append(record)
+        elif query[0] == RR_TYPE_NS:
+            name = protecc_str(".".join(query[3])).lower()
+            conn = await db_pool.acquire()
+            records = await conn.fetch(f"execute get_ns_record('{name}')")
+            await db_pool.release(conn)
+            for record in records:
+                results.append(record)
+    print(results)
     return results
 
 async def DBConnecter(db_pool_fut, q):
@@ -26,8 +32,110 @@ async def DBConnecter(db_pool_fut, q):
 
 async def DBConnectInit(conn):
     # TODO: Add prepared statements on connection
-    await conn.execute('prepare get_a_record(TEXT) as select dns_a_record.fqdn, ttl, ip_address,  dns_domain.id from dns_a_record left outer join dns_domain on dns_a_record.domain_id = dns_domain.id where dns_a_record.fqdn = $1;')
-    
+    await conn.execute(f'''prepare get_a_record(TEXT) as
+select
+    {RR_TYPE_A} as type,
+    dns_a_record.ttl as ttl,
+    ip_address,
+    dns_domain.name as domainname,
+    NULL::varchar(255) as nsname,
+    NULL::int as serial,
+    NULL::varchar(255) as rname
+from
+    dns_a_record
+left outer join
+    dns_domain
+on
+    dns_domain.id = dns_a_record.domain_id
+where
+    dns_a_record.fqdn = $1
+union
+select
+    {RR_TYPE_NS} as type,
+    dns_ns_record.ttl as ttl,
+    NULL::inet as ip_address,
+    dns_domain.name as domainname,
+    dns_ns_record.name as nsname,
+    NULL::int as serial,
+    NULL::varchar(255) as rname
+from
+    dns_domain
+left outer join
+    dns_a_record
+on
+    dns_domain.id = dns_a_record.domain_id
+left outer join
+    dns_ns_record
+on
+    dns_domain.id = dns_ns_record.domain_id
+where
+    dns_a_record.fqdn = $1
+union
+select
+    {RR_TYPE_SOA} as type,
+    NULL::int as ttl,
+    NULL::inet as ip_address,
+    NULL::varchar(255) as domainname,
+    NULL::varchar(255) as nsname,
+    dns_soa_record.serial as serial,
+    dns_soa_record.rname as rname
+from
+    dns_domain
+left outer join
+    dns_a_record
+on
+    dns_domain.id = dns_a_record.domain_id
+left outer join
+    dns_soa_record
+on
+    dns_domain.id = dns_soa_record.domain_id
+where
+    dns_a_record.fqdn = $1
+;
+''')
+
+    await conn.execute(f'''prepare get_ns_record(TEXT) as
+select
+    {RR_TYPE_NS} as type,
+    dns_ns_record.ttl as ttl,
+    NULL::inet as ip_address,
+    dns_domain.name as domainname,
+    dns_ns_record.name as nsname,
+    NULL::int as serial,
+    NULL::varchar(255) as rname
+from
+    dns_domain
+left outer join
+    dns_ns_record
+on
+    dns_domain.id = dns_ns_record.domain_id
+where
+    dns_ns_record.fqdn = $1
+union
+select
+    {RR_TYPE_SOA} as type,
+    NULL::int as ttl,
+    NULL::inet as ip_address,
+    NULL::varchar(255) as domainname,
+    NULL::varchar(255) as nsname,
+    dns_soa_record.serial as serial,
+    dns_soa_record.rname as rname
+from
+    dns_domain
+left outer join
+    dns_a_record
+on
+    dns_domain.id = dns_a_record.domain_id
+left outer join
+    dns_soa_record
+on
+    dns_domain.id = dns_soa_record.domain_id
+where
+    dns_a_record.fqdn = $1 and
+    dns_domain.name <> $1
+;
+''')
+
 
 def RunDBThread(q):
     print(f'Starting DB Thread')
