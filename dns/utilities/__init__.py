@@ -1,4 +1,4 @@
 from .dynamicdns import DynamicDNSManager
-from .server import RunDNSServer
+from .server import LaunchDNSServer
 #from .client import DNSClient
 

@@ -5,7 +5,7 @@ import asyncpg
 from .protocol import DNSServerProtocol
 from .db import DBConnectInit
 
-def RunDNSServer(ip_address, port):
+def LaunchDNSServer(ip_address, port):
 #    q = Queue()
 #    thread = Thread(target=RunDBThread, args=(q,), daemon=True)
 #    thread.start()
@@ -23,7 +23,6 @@ async def UDPListener(ip_address='127.0.0.1', port=53):
 
     loop = asyncio.get_running_loop()
     db_pool = await asyncpg.create_pool(dsn,init=DBConnectInit)
-
 #    print("Starting DNS UDP Server")
 
     # Get a reference to the event loop as we plan to use
