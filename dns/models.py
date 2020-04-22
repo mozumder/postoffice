@@ -201,9 +201,12 @@ class SOA_Record(models.Model):
     expiry = models.IntegerField(
         verbose_name=_("Expiration Time"),
         default=1209600)
-    nx = models.IntegerField(
+    nxttl = models.IntegerField(
         verbose_name=_("Negative Caching Time"),
         default=180)
+    ttl = models.IntegerField(
+        verbose_name=_("Time-to-Live"),
+        default=settings.RECORD_TTL)
     serial = models.IntegerField(
         verbose_name=_("Serial Number"),
         default=0)

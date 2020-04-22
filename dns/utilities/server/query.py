@@ -16,6 +16,7 @@ question_struct = bitstruct.compile(question_format)
 answer_struct = bitstruct.compile(answer_format)
 opt_struct = bitstruct.compile(opt_format)
 label_struct = bitstruct.compile(label_format)
+soa_struct = bitstruct.compile(soa_format)
 
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
@@ -209,15 +210,41 @@ async def Query(pool, data, addr, transport):
                         domainnameoffset = query[2].find(domainlabel)
                         if domainnameoffset != -1:
                             domainlabel = label_struct.pack(offset+domainnameoffset)
-                        RDATA = b''
+                        nslabel = b''
                         nslabels = record[4].split(".")
                         for label in nslabels:
-                            RDATA = RDATA + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        RDATA = RDATA + b'\0'
-                        RLENGTH = len(RDATA)
+                            nslabel = nslabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        nslabel = nslabel + b'\0'
+                        RLENGTH = len(nslabel)
                         print(f'NS Name={record[4]} ttl={record[1]}')
-                        response_data = domainlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        response_data = domainlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + nslabel
                         if query[0] == RR_TYPE_NS:
+                            answers_data.append(response_data)
+                        else:
+                            authority_data.append(response_data)
+                    elif record[0] == RR_TYPE_SOA:
+                        print(record)
+                        domainlabel = b''
+                        domainnames = record[3].split(".")
+                        for label in domainnames:
+                            domainlabel = domainlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        domainlabel = domainlabel + b'\0'
+                        domainnameoffset = query[2].find(domainlabel)
+                        if domainnameoffset != -1:
+                            domainlabel = label_struct.pack(offset+domainnameoffset)
+                        nslabel = b''
+                        nslabels = record[4].split(".")
+                        for label in nslabels:
+                            nslabel = nslabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        nslabel = nslabel + b'\0'
+                        mailboxlabel = b''
+                        mailboxlabels = record[5].replace('@','.').split(".")
+                        for label in mailboxlabels:
+                            mailboxlabel = mailboxlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        mailboxlabel = mailboxlabel + b'\0'
+                        RLENGTH = len(nslabel) + len(mailboxlabel) + 20
+                        response_data = domainlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + nslabel + mailboxlabel + soa_struct.pack(record[6],record[7],record[8],record[9],record[10])
+                        if query[0] == RR_TYPE_SOA and domainnameoffset == 0:
                             answers_data.append(response_data)
                         else:
                             authority_data.append(response_data)

@@ -58,7 +58,7 @@ class SOA_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'origin', 'rname', 'nameserver', 'refresh', 'retry', 'expiry', 'nx', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'origin', 'rname', 'nameserver', 'refresh', 'retry', 'expiry', 'nxttl', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
@@ -71,7 +71,8 @@ class SOA_RecordAdmin(admin.ModelAdmin):
             ('refresh'),
             ('retry'),
             ('expiry'),
-            ('nx'),
+            ('nxttl'),
+            ('ttl'),
             ('serial'),
             ('source'),
             ('date_updated'),
