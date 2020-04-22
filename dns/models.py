@@ -27,7 +27,7 @@ class Domain(models.Model):
         on_delete=models.CASCADE)
     name = models.CharField(
         verbose_name=_("Domain Name"),
-        max_length=80)
+        max_length=255)
     date_updated = models.DateTimeField(
         verbose_name=_("Date Updated"),
         auto_now=True)
@@ -53,7 +53,7 @@ class Domain(models.Model):
 class Host(models.Model):
     name = models.CharField(
         verbose_name=_("Name"),
-        max_length=120)
+        max_length=64)
     domain = models.ForeignKey(
         Domain,
         verbose_name=_("Domain"),
@@ -177,15 +177,15 @@ class SOA_Record(models.Model):
         on_delete=models.CASCADE)
     origin = models.CharField(
         verbose_name=_("Origin"),
-        max_length=64,
+        max_length=255,
         null=True, blank=True)
     rname = models.CharField(
         verbose_name=_("Responsible Party Name"),
-        max_length=64,
+        max_length=255,
         null=True, blank=True)
     nameserver = models.CharField(
         verbose_name=_("Name Server"),
-        max_length=64,
+        max_length=255,
         null=True, blank=True)
     nameserver_host = models.ForeignKey(
         Host,
@@ -254,7 +254,7 @@ class A_Record(models.Model):
         null=True, blank=True)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     ip_address = models.GenericIPAddressField(
         verbose_name=_("IP Address"),
@@ -328,7 +328,7 @@ class AAAA_Record(models.Model):
         null=True, blank=True)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     ip_address = models.GenericIPAddressField(
         verbose_name=_("IP Address"),
@@ -395,7 +395,7 @@ class CNAME_Record(models.Model):
         max_length=64)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     alias = models.CharField(
         #If the value ends in a dot, it is for an external domain.
@@ -461,7 +461,7 @@ class MX_Record(models.Model):
         null=True, blank=True)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     server = models.CharField(
         #If the value ends in a dot, it is for an outside domain.
@@ -531,7 +531,7 @@ class TXT_Record(models.Model):
         null=True, blank=True)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     value = models.CharField(
         verbose_name=_("Value"),
@@ -583,7 +583,7 @@ class PTR_Record(models.Model):
         max_length=64)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     system = models.CharField(
         #If the value ends in a dot, it is for an external domain.
@@ -648,7 +648,7 @@ class NS_Record(models.Model):
         max_length=64)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     delegate = models.CharField(
         #If the value ends in a dot, it is for an external domain.
@@ -714,7 +714,7 @@ class SRV_Record(models.Model):
         null=True, blank=True)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
     priority = models.IntegerField(
         verbose_name=_("Priority"))
@@ -796,7 +796,7 @@ class CAA_Record(models.Model):
         null=True, blank=True)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
-        max_length=150,
+        max_length=255,
         null=True, blank=True)
 #    provider = models.CharField(
 #        _("Provider"),

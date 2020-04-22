@@ -170,6 +170,8 @@ async def Query(pool, data, addr, transport):
     # MARK: - Generate Response
     questions_data = []
     answers_data = []
+    authority_data = []
+    additional_data = []
 
     QR_response = True
     QDCOUNT_questions_count = len(results)
@@ -183,29 +185,53 @@ async def Query(pool, data, addr, transport):
         questions = []
         if len(results) > 0:
             if len(results[0]) > 0:
-                AA_authoritative_answer = results[0][0][1][3]
+                AA_authoritative_answer = True if results[0][0][3] != None else False
         for i in range(len(queries)):
             query = queries[i]
             question = query[2] + question_struct.pack(query[0], query[1])
             questions_data.append(question)
             if len(results) > 0:
+                answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
-                    label = label_struct.pack(offset)
                     if record[0] == RR_TYPE_A:
                         RLENGTH = 4
-                        RDATA = record[1][2].packed
-                        print(f'IP Address = {RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
-                    response_data = label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1][1], RLENGTH) + RDATA
-                    answers_data.append(response_data)
+                        RDATA = record[2].packed
+                        print(f'A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]} ttl={record[1]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        answers_data.append(response_data)
+                    elif record[0] == RR_TYPE_NS:
+                        domainlabel = b''
+                        domainnames = record[3].split(".")
+                        for label in domainnames:
+                            domainlabel = domainlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        domainlabel = domainlabel + b'\0'
+                        domainnameoffset = query[2].find(domainlabel)
+                        if domainnameoffset != -1:
+                            domainlabel = label_struct.pack(offset+domainnameoffset)
+                        RDATA = b''
+                        nslabels = record[4].split(".")
+                        for label in nslabels:
+                            RDATA = RDATA + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        RDATA = RDATA + b'\0'
+                        RLENGTH = len(RDATA)
+                        print(f'NS Name={record[4]} ttl={record[1]}')
+                        response_data = domainlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        if query[0] == RR_TYPE_NS:
+                            answers_data.append(response_data)
+                        else:
+                            authority_data.append(response_data)
                 offset = offset + len(queries[i]) + 4
 
     ANCOUNT_answers_count = len(answers_data)
+    NSCOUNT_authoritative_answers_count = len(authority_data)
     data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
     for question in questions_data:
         data = data + question
     for answer in answers_data:
         data = data + answer
+    for authority in authority_data:
+        data = data + authority
     transport.sendto(data, addr)
 
 
