@@ -1,3 +1,6 @@
+# TODO: Test item
+# FIXME: Fix broken item
+
 import asyncio
 import functools
 import operator
@@ -16,6 +19,8 @@ label_struct = bitstruct.compile(label_format)
 
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
+
+# MARK: Header
     hexdump.hexdump(data)
     print(f'HEADER: Starting byte 1')
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
@@ -156,10 +161,13 @@ async def Query(pool, data, addr, transport):
         print(f'  DO_DNSSEC_Answer_OK={record[3]}')
         print(f'  length={record[4]}')
     
+    # MARK: DB Lookup
     tasks =  [db_lookup(pool,query) for query in queries]
 
     results = await asyncio.gather(*tasks)
 
+
+    # MARK: - Generate Response
     questions_data = []
     answers_data = []
 
