@@ -1,6 +1,3 @@
-# TODO: Test item
-# FIXME: Fix broken item
-
 import asyncio
 import functools
 import operator
@@ -21,7 +18,18 @@ soa_struct = bitstruct.compile(soa_format)
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
 
-# MARK: Header
+    # MARK: Header
+    # TODO: Handle OPCODE_operation
+    # TODO: Handle RD_recursion_desired
+    # TODO: Handle QR_response
+    # TODO: Handle TC_truncation
+    # TODO: Handle AD_authentic_data
+    # TODO: Handle CD_checking_disabled
+    # FIXME: Check QDCOUNT_questions_count upper and lower limit
+    # FIXME: Check ANCOUNT_answers_count upper and lower limit
+    # FIXME: Check NSCOUNT_authoritative_answers_count upper and lower limit
+    # FIXME: Check ARCOUNT_additional_records_count upper and lower limit
+    # FIXME: Check over/under message length
     hexdump.hexdump(data)
     print(f'HEADER: Starting byte 1')
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
@@ -169,6 +177,17 @@ async def Query(pool, data, addr, transport):
 
 
     # MARK: - Generate Response
+    # TODO: Compress labels through referencing
+    # TODO: Generate OPT Additional Response
+    # TODO: Generate CNAME Resource Record
+    # TODO: Generate MX Resource Record
+    # TODO: Generate SRV Resource Record
+    # TODO: Generate PTR Resource Record
+    # TODO: Generate AAAA Resource Record
+    # TODO: Generate CAA Resource Record
+    # TODO: Generate IXFR Resource Transfer
+    # TODO: Generate TXFR Resource Transfer
+
     questions_data = []
     answers_data = []
     authority_data = []
