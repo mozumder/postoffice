@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from dns.models import Domain, A_Record, SOA_Record, NS_Record, SOURCE_SCRIPT
+from dns.models import Domain, A_Record, AAAA_Record, SOA_Record, NS_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
     help = ("Create a domain with username as its owner")
@@ -22,6 +22,12 @@ class Command(BaseCommand):
             action='store',
             default=None,
             help="Email address of the person responsible for this domain and to which email may be sent to report errors or problems. If not set, will use email address of user. This is RNAME in the domain's SOA record.",
+            )
+        parser.add_argument(
+            '-6', '--ipv6',
+            action='store',
+            default=None,
+            help="IPv6 Address",
             )
         parser.add_argument(
             '-ttl', '--default_ttl',
@@ -152,4 +158,17 @@ class Command(BaseCommand):
                 print(f'Created NS Record {ns_record} under domain {d}.')
             else:
                 print(f'NS Record {ns_record} under domain {d} updated.')
+
+
+        if options['ipv6']:
+            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=d, name=None, ip_address = options['ipv6'])
+            aaaa_record.host = h
+            aaaa_record.fqdn = domainname
+            aaaa_record.ttl = options['ttl']
+            aaaa_record.source = SOURCE_SCRIPT
+            aaaa_record.save()
+            if aaaa_created:
+                print(f'Created AAAA Record {aaaa_record} under domain {domain} with host {h}.')
+            else:
+                print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
 
