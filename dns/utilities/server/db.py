@@ -1,3 +1,4 @@
+# TODO: Optimize UNION statements into single query
 from .codes import *
 
 def protecc_str(name:str):
