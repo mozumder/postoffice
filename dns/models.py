@@ -261,6 +261,7 @@ class A_Record(models.Model):
         null=True, blank=True)
     ip_address = models.GenericIPAddressField(
         verbose_name=_("IP Address"),
+        protocol='IPv4',
         db_index=True)
     host = models.ForeignKey(
         Host,
@@ -335,6 +336,7 @@ class AAAA_Record(models.Model):
         null=True, blank=True)
     ip_address = models.GenericIPAddressField(
         verbose_name=_("IP Address"),
+        protocol='IPv6',
         db_index=True)
     host = models.ForeignKey(
         Host,

@@ -220,6 +220,12 @@ async def Query(pool, data, addr, transport):
                         print(f'A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]} ttl={record[1]}')
                         response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
                         answers_data.append(response_data)
+                    elif record[0] == RR_TYPE_AAAA:
+                        RLENGTH = 16
+                        RDATA = record[2].packed
+                        print(f'A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]} ttl={record[1]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        answers_data.append(response_data)
                     elif record[0] == RR_TYPE_NS:
                         domainlabel = b''
                         domainnames = record[3].split(".")
