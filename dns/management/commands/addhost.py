@@ -4,10 +4,10 @@ Create Host
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from dns.models import Host, Domain, A_Record, SOURCE_SCRIPT
+from dns.models import Host, Domain, A_Record, AAAA_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
-    help = ("Create a host under a domain")
+    help = ("Add a host to a domain")
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,6 +15,12 @@ class Command(BaseCommand):
             action='store',
             default=settings.RECORD_TTL,
             help="Time-to-live of added A Name record",
+            )
+        parser.add_argument(
+            '-6', '--ipv6',
+            action='store',
+            default=None,
+            help="IPv6 Address",
             )
         parser.add_argument(
             '-dyn','--dynamic_ip',
@@ -80,4 +86,16 @@ class Command(BaseCommand):
             print(f'Created A Record {a_record} under domain {domain} with host {h}.')
         else:
             print(f'A Record {a_record} under domain {domain} updated.')
+
+        if options['ipv6']:
+            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ipv6'])
+            aaaa_record.host = h
+            aaaa_record.fqdn = fqdn
+            aaaa_record.ttl = options['ttl']
+            aaaa_record.source = SOURCE_SCRIPT
+            aaaa_record.save()
+            if aaaa_created:
+                print(f'Created AAAA Record {aaaa_record} under domain {domain} with host {h}.')
+            else:
+                print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
 

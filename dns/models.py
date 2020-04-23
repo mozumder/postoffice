@@ -34,7 +34,7 @@ class Domain(models.Model):
     def __str__(self):
         return self.name
     class Meta:
-        verbose_name = _("Domain Name")
+        verbose_name = _("Domain")
         indexes = [
             models.Index(
                 fields = [
@@ -76,7 +76,7 @@ class Host(models.Model):
             domain = names[-3] + "." + domain
         return domain
     class Meta:
-        verbose_name = _("Host Name")
+        verbose_name = _("Host")
         indexes = [
             models.Index(
                 fields = [
@@ -396,19 +396,19 @@ class CNAME_Record(models.Model):
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
     name = models.CharField(
-        verbose_name=_("Name"),
+        verbose_name=_("Alias Name"),
         max_length=64)
     fqdn = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
-    alias = models.CharField(
+    canonical_name = models.CharField(
         #If the value ends in a dot, it is for an external domain.
-        verbose_name=_("Name"),
-        max_length=64)
-    alias_host = models.ForeignKey(
+        verbose_name=_("Canonical Name"),
+        max_length=255)
+    host = models.ForeignKey(
         Host,
-        verbose_name=_("Alias Host"),
+        verbose_name=_("Canonical Host"),
         null=True, blank=True,
         on_delete=models.CASCADE)
     ttl = models.IntegerField(
