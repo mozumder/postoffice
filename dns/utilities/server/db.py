@@ -1,5 +1,15 @@
+import os
+import sys
+import logging
+import inspect
+
+from django.db.utils import ProgrammingError, OperationalError
+
 # TODO: Optimize UNION statements into single query
 from .codes import *
+
+dblogger = logging.getLogger("database")
+logger = logging.getLogger(__name__)
 
 def protecc_str(name:str):
     return name.replace('"', r'\"').replace("'", r"\'")
@@ -13,6 +23,13 @@ async def db_lookup(db_pool, query):
             name = protecc_str(".".join(query[3])).lower()
             conn = await db_pool.acquire()
             records = await conn.fetch(f"execute get_a_record('{name}')")
+            await db_pool.release(conn)
+            for record in records:
+                results.append(record)
+        elif query[0] == RR_TYPE_AAAA:
+            name = protecc_str(".".join(query[3])).lower()
+            conn = await db_pool.acquire()
+            records = await conn.fetch(f"execute get_aaaa_record('{name}')")
             await db_pool.release(conn)
             for record in records:
                 results.append(record)
@@ -39,178 +56,48 @@ async def DBConnecter(db_pool_fut, q):
 
 async def DBConnectInit(conn):
     # TODO: Add prepared statements on connection
-    await conn.execute(f'''prepare get_a_record(TEXT) as
-select
-    {RR_TYPE_A} as type,
-    dns_a_record.ttl as ttl,
-    ip_address,
-    dns_domain.name as domainname,
-    NULL::varchar(255) as nsname,
-    NULL::varchar(255) as rname,
-    NULL::int as serial,
-    NULL::int as refresh,
-    NULL::int as retry,
-    NULL::int as expiry,
-    NULL::int as nxttl
-from
-    dns_a_record
-left outer join
-    dns_domain
-on
-    dns_domain.id = dns_a_record.domain_id
-where
-    dns_a_record.fqdn = $1
-union
-select
-    {RR_TYPE_NS} as type,
-    dns_ns_record.ttl as ttl,
-    NULL::inet as ip_address,
-    dns_domain.name as domainname,
-    dns_ns_record.name as nsname,
-    NULL::varchar(255) as rname,
-    NULL::int as serial,
-    NULL::int as refresh,
-    NULL::int as retry,
-    NULL::int as expiry,
-    NULL::int as nxttl
-from
-    dns_domain
-left outer join
-    dns_a_record
-on
-    dns_domain.id = dns_a_record.domain_id
-left outer join
-    dns_ns_record
-on
-    dns_domain.id = dns_ns_record.domain_id
-where
-    dns_a_record.fqdn = $1
-union
-select
-    {RR_TYPE_SOA} as type,
-    dns_soa_record.ttl as ttl,
-    NULL::inet as ip_address,
-    dns_domain.name as domainname,
-    dns_soa_record.nameserver as nsname,
-    dns_soa_record.rname as rname,
-    dns_soa_record.serial as serial,
-    dns_soa_record.refresh as refresh,
-    dns_soa_record.retry as retry,
-    dns_soa_record.expiry as expiry,
-    dns_soa_record.nxttl as nxttl
-from
-    dns_domain
-left outer join
-    dns_a_record
-on
-    dns_domain.id = dns_a_record.domain_id
-left outer join
-    dns_soa_record
-on
-    dns_domain.id = dns_soa_record.domain_id
-where
-    dns_a_record.fqdn <> $1 AND
-    dns_domain.name <> $1
-;
-''')
-
-    await conn.execute(f'''prepare get_ns_record(TEXT) as
-select
-    {RR_TYPE_NS} as type,
-    dns_ns_record.ttl as ttl,
-    NULL::inet as ip_address,
-    dns_domain.name as domainname,
-    dns_ns_record.name as nsname,
-    NULL::varchar(255) as rname,
-    NULL::int as serial,
-    NULL::int as refresh,
-    NULL::int as retry,
-    NULL::int as expiry,
-    NULL::int as nxttl
-from
-    dns_domain
-left outer join
-    dns_ns_record
-on
-    dns_domain.id = dns_ns_record.domain_id
-where
-    dns_ns_record.fqdn = $1
-union
-select
-    {RR_TYPE_SOA} as type,
-    dns_soa_record.ttl as ttl,
-    NULL::inet as ip_address,
-    dns_domain.name as domainname,
-    dns_soa_record.nameserver as nsname,
-    dns_soa_record.rname as rname,
-    dns_soa_record.serial as serial,
-    dns_soa_record.refresh as refresh,
-    dns_soa_record.retry as retry,
-    dns_soa_record.expiry as expiry,
-    dns_soa_record.nxttl as nxttl
-from
-    dns_domain
-left outer join
-    dns_a_record
-on
-    dns_domain.id = dns_a_record.domain_id
-left outer join
-    dns_soa_record
-on
-    dns_domain.id = dns_soa_record.domain_id
-where
-    dns_a_record.fqdn <> $1 and
-    dns_domain.name <> $1
-;
-''')
-    await conn.execute(f'''prepare get_soa_record(TEXT) as
-select
-    {RR_TYPE_NS} as type,
-    dns_ns_record.ttl as ttl,
-    NULL::inet as ip_address,
-    dns_domain.name as domainname,
-    dns_ns_record.name as nsname,
-    NULL::varchar(255) as rname,
-    NULL::int as serial,
-    NULL::int as refresh,
-    NULL::int as retry,
-    NULL::int as expiry,
-    NULL::int as nxttl
-from
-    dns_domain
-left outer join
-    dns_ns_record
-on
-    dns_domain.id = dns_ns_record.domain_id
-where
-    dns_ns_record.fqdn = $1
-union
-select
-    {RR_TYPE_SOA} as type,
-    dns_soa_record.ttl as ttl,
-    NULL::inet as ip_address,
-    dns_domain.name as domainname,
-    dns_soa_record.nameserver as nsname,
-    dns_soa_record.rname as rname,
-    dns_soa_record.serial as serial,
-    dns_soa_record.refresh as refresh,
-    dns_soa_record.retry as retry,
-    dns_soa_record.expiry as expiry,
-    dns_soa_record.nxttl as nxttl
-from
-    dns_domain
-left outer join
-    dns_a_record
-on
-    dns_domain.id = dns_a_record.domain_id
-left outer join
-    dns_soa_record
-on
-    dns_domain.id = dns_soa_record.domain_id
-where
-    dns_a_record.fqdn = $1
-;
-''')
+    
+    sql_files = [
+        'get_a_record.sql',
+        'get_aaaa_record.sql',
+        'get_caa_record.sql',
+        'get_cname_record.sql',
+        'get_mx_record.sql',
+        'get_ns_record.sql',
+        'get_ptr_record.sql',
+        'get_soa_record.sql',
+        'get_srv_record.sql',
+        'get_txt_record.sql',
+    ]
+    template_values = {
+        'RR_TYPE_A':RR_TYPE_A,
+        'RR_TYPE_AAAA':RR_TYPE_AAAA,
+        'RR_TYPE_NS':RR_TYPE_NS,
+        'RR_TYPE_NS':RR_TYPE_NS,
+        'RR_TYPE_SOA':RR_TYPE_SOA,
+    }
+    dir = os.path.dirname('dns/include/sql/')
+    for file_name in sql_files:
+        try:
+            file = open(dir+'/'+file_name, 'r')
+        except FileNotFoundError:
+            logger.info('No SQL prepared statements file: %s' % dir+'/'+file_name)
+            pass
+        except (OSError, IOError) as e:
+            logger.error('Error reading SQL prepared statements file: %s' % file_name)
+            raise e
+        else:
+            sql_prepare=file.read().strip()
+            if sql_prepare:
+                try:
+                    await conn.execute(sql_prepare.format(**template_values))
+                except (OperationalError, ProgrammingError) as e:
+                    type, value, tb = sys.exc_info()
+                    dblogger.error(f"Failed preparing statements statements with {type.__name__}!")
+                    dblogger.error(f'- Specifically, {value}')
+                    dblogger.error("- Please review the most recent stack entries:\n" + "".join(traceback.format_list(traceback.extract_tb(tb, limit=5))))
+                    logger.error(f'Caught Database error {value} while trying to exectute sql file {file_name}')
+                    logger.error(f'- Ignoring and continuing')
 
 
 def RunDBThread(q):
