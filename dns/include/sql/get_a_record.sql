@@ -69,5 +69,5 @@ on
     dns_domain.id = dns_soa_record.domain_id
 where
     dns_a_record.fqdn <> $1 AND
-    $1 NOT LIKE '%' || dns_domain.name ;
+    $1 LIKE '%' || dns_domain.name ;
 ;
