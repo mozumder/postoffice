@@ -30,9 +30,10 @@ class Command(BaseCommand):
             help="IPv6 Address",
             )
         parser.add_argument(
-            '-ttl', '--default_ttl',
+            '-ttl',
             action='store',
             default=settings.RECORD_TTL,
+            type=int,
             help="Default time-to-live in seconds. Slave DNS do not use this value.",
             )
         parser.add_argument(
@@ -121,7 +122,7 @@ class Command(BaseCommand):
         a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None, ip_address=options['ip_address'])
         a_record.host = None
         a_record.fqdn = domainname
-        a_record.ttl = options['default_ttl']
+        a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
         a_record.source = SOURCE_SCRIPT
         a_record.save()
@@ -132,7 +133,7 @@ class Command(BaseCommand):
 
         soa_record, soa_created = SOA_Record.objects.get_or_create(domain=d)
         soa_record.host = None
-        soa_record.ttl = options['default_ttl']
+        soa_record.ttl = options['ttl']
         soa_record.rname = email
         soa_record.mname = options['name']
         soa_record.nameserver = options['name_server'][0]
@@ -150,7 +151,7 @@ class Command(BaseCommand):
 
         for ns in options['name_server']:
             ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,name=ns)
-            ns_record.ttl = options['default_ttl']
+            ns_record.ttl = options['ttl']
             ns_record.fqdn = domainname
             ns_record.source = SOURCE_SCRIPT
             ns_record.save()

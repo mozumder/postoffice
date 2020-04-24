@@ -290,9 +290,9 @@ class A_Record(models.Model):
         auto_now=True)
     def __str__(self):
         if self.host:
-            return f'{self.name}.{self.domain.name}'
+            return f'{self.name}.{self.domain.name}:{self.ip_address}'
         else:
-            return f'.{self.domain.name}'
+            return f'.{self.domain.name}:{self.ip_address}'
     def domain_name(self):
         names = self.name.split(".")[1:]
         tld = names[-1]
@@ -312,13 +312,6 @@ class A_Record(models.Model):
                     'name',
                     'domain'],
                 name='a_record_idx'),
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields = [
-                    'name',
-                    'domain'],
-                name='a_record_uniques'),
         ]
 
 class AAAA_Record(models.Model):
@@ -359,9 +352,9 @@ class AAAA_Record(models.Model):
         auto_now=True)
     def __str__(self):
         if self.host:
-            return f'{self.name}.{self.domain.name}'
+            return f'{self.name}.{self.domain.name}:{self.ip_address}'
         else:
-            return f'.{self.domain.name}'
+            return f'.{self.domain.name}:{self.ip_address}'
     def domain_name(self):
         names = self.name.split(".")[1:]
         tld = names[-1]
@@ -381,13 +374,6 @@ class AAAA_Record(models.Model):
                     'name',
                     'domain'],
                 name='aaaa_record_idx'),
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields = [
-                    'name',
-                    'domain'],
-                name='aaaa_record_uniques'),
         ]
 
 class CNAME_Record(models.Model):
@@ -468,16 +454,19 @@ class MX_Record(models.Model):
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
-    server = models.CharField(
+    hostname = models.CharField(
         #If the value ends in a dot, it is for an outside domain.
-        verbose_name=_("Server"),
+        verbose_name=_("Hostname"),
         max_length=64,
         null=True, blank=True)
-    server_host = models.ForeignKey(
+    host = models.ForeignKey(
         Host,
         verbose_name=_("Mail Server Host"),
         null=True, blank=True,
         on_delete=models.CASCADE)
+    preference = models.IntegerField(
+        verbose_name=_("Preference"),
+        default=0)
     ttl = models.IntegerField(
         verbose_name=_("Time-to-Live"),
         default=settings.RECORD_TTL)

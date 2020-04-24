@@ -205,7 +205,7 @@ class MX_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'name', 'server', 'ttl', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'name', 'host', 'preference', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
@@ -213,8 +213,9 @@ class MX_RecordAdmin(admin.ModelAdmin):
             ('domain'),
             ('name'),
             ('fqdn'),
-            ('server'),
-            ('server_host'),
+            ('hostname'),
+            ('host'),
+            ('preference'),
             ('ttl'),
             ('serial'),
             ('source'),
