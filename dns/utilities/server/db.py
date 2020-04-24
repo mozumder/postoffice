@@ -33,6 +33,20 @@ async def db_lookup(db_pool, query):
             await db_pool.release(conn)
             for record in records:
                 results.append(record)
+        elif query[0] == RR_TYPE_CNAME:
+            name = protecc_str(".".join(query[3])).lower()
+            conn = await db_pool.acquire()
+            records = await conn.fetch(f"execute get_cname_record('{name}')")
+            await db_pool.release(conn)
+            for record in records:
+                results.append(record)
+        elif query[0] == RR_TYPE_MX:
+            name = protecc_str(".".join(query[3])).lower()
+            conn = await db_pool.acquire()
+            records = await conn.fetch(f"execute get_mx_record('{name}')")
+            await db_pool.release(conn)
+            for record in records:
+                results.append(record)
         elif query[0] == RR_TYPE_NS:
             name = protecc_str(".".join(query[3])).lower()
             conn = await db_pool.acquire()
@@ -75,6 +89,8 @@ async def DBConnectInit(conn):
         'RR_TYPE_NS':RR_TYPE_NS,
         'RR_TYPE_NS':RR_TYPE_NS,
         'RR_TYPE_SOA':RR_TYPE_SOA,
+        'RR_TYPE_CNAME':RR_TYPE_CNAME,
+        'RR_TYPE_MX':RR_TYPE_MX,
     }
     dir = os.path.dirname('dns/include/sql/')
     for file_name in sql_files:

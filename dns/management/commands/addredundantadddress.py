@@ -1,5 +1,5 @@
 """
-Create Host
+Add another IP address for a host
 """
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
@@ -22,19 +22,6 @@ class Command(BaseCommand):
             action='store',
             default=None,
             help="IPv6 Address",
-            )
-        parser.add_argument(
-            '-mx',
-            action='store_true',
-            default=None,
-            help="Host is a mail server",
-            )
-        parser.add_argument(
-            '-p', '--mx_priority',
-            action='store',
-            default=0,
-            type=int,
-            help="Priority level for email server. Highest priority is 0.",
             )
         parser.add_argument(
             '-dyn','--dynamic_ip',
@@ -74,54 +61,33 @@ class Command(BaseCommand):
             raise CommandError("Need an IP Address.")
         if options['host'] == None:
             print("Using blank host name.")
-            
+        
         fqdn = options['host'] + "." + domainname
 
         try:
             domain = Domain.objects.get(name=options['domain'])
         except:
             raise CommandError('Domain not found. Exiting')
+        try:
+            h = Host.objects.get(domain=domain,name=options['host'])
+        except:
+            print(f'No existing host. Existing.')
+            return
 
-        h, h_created = Host.objects.get_or_create(domain=domain,name=options['host'])
-        h.save()
-        if h_created:
-            print(f'Created host {h} under domain {h.domain}.')
-        else:
-            print(f'Host {h} under domain {h.domain} already exists.')
-
-        a_record, a_created = A_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ip_address'])
+        a_record = A_Record.objects.create(domain=domain, name=options['host'], ip_address = options['ip_address'])
         a_record.host = h
         a_record.fqdn = fqdn
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
         a_record.source = SOURCE_SCRIPT
         a_record.save()
-        if a_created:
-            print(f'Created A Record {a_record} under domain {domain} with host {h}.')
-        else:
-            print(f'A Record {a_record} under domain {domain} updated.')
+        print(f'Created A Record {a_record} under domain {domain} for host {h}.')
 
         if options['ipv6']:
-            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ipv6'])
+            aaaa_record = AAAA_Record.objects.create(domain=domain, name=options['host'], ip_address = options['ipv6'])
             aaaa_record.host = h
             aaaa_record.fqdn = fqdn
             aaaa_record.ttl = options['ttl']
             aaaa_record.source = SOURCE_SCRIPT
             aaaa_record.save()
-            if aaaa_created:
-                print(f'Created AAAA Record {aaaa_record} under domain {domain} with host {h}.')
-            else:
-                print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
-
-        if options['mx']:
-            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname= options['host'])
-            mx_record.host = h
-            mx_record.fqdn = domain.name
-            mx_record.ttl = options['ttl']
-            mx_record.source = SOURCE_SCRIPT
-            mx_record.save()
-            if mx_created:
-                print(f'Created MX Record {mx_record} under domain {domain} with host {h}.')
-            else:
-                print(f'MX Record {mx_record} under domain {domain} updated.')
-
+            print(f'Created AAAA Record {aaaa_record} under domain {domain} for host {h}.')

@@ -4,6 +4,7 @@ answer_format = '>u16u16u32u16'
 label_format = '>P2u14'
 soa_format = '>u32u32u32u32u32'
 opt_format = '>u8u8b1p15'
+mx_format = '>u16u16u32u16u16'
 
 OPCODE_QUERY=0
 OPCODE_IQUERY=1
