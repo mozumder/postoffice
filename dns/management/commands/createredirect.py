@@ -1,5 +1,5 @@
 """
-Create Host
+Create redirect from one hose name to another. This adds a CNAME record.
 """
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
@@ -7,13 +7,14 @@ from django.conf import settings
 from dns.models import Host, Domain, CNAME_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
-    help = ("Add an alias name for a host. This creates a CNAME record")
+    help = ("Create redirect from one hose name to another. This is an alias name for a host, and creates a CNAME record")
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--ttl',
+            '-ttl',
             action='store',
             default=settings.RECORD_TTL,
+            type=int,
             help="Time-to-live of added A Name record",
             )
         parser.add_argument(
@@ -24,7 +25,7 @@ class Command(BaseCommand):
             help="Domain name that host is under",
             )
         parser.add_argument(
-            'canonical_hostname',
+            'host',
             nargs='?',
             action='store',
             default=None,
@@ -43,7 +44,7 @@ class Command(BaseCommand):
             raise CommandError("Need a Domain Name.")
         else:
             domainname = options['domain']
-        if options['canonical_hostname'] == None:
+        if options['host'] == None:
             raise CommandError("Need an Canonical Name to alias.")
         if options['alias'] == None:
             raise CommandError("Need an Alias Name.")
@@ -55,9 +56,9 @@ class Command(BaseCommand):
         except:
             raise CommandError('Domain not found. Exiting')
 
-
-        cname_record, cname_created = CNAME_Record.objects.get_or_create(domain=domain, name=options['alias'], canonical_name = options['canonical_hostname'])
-        h = Host.objects.filter(domain=domain,name=options['canonical_hostname'])
+        canonical_name = options['host'] + '.' + options['domain']
+        cname_record, cname_created = CNAME_Record.objects.get_or_create(domain=domain, name=options['alias'], canonical_name = canonical_name)
+        h = Host.objects.filter(domain=domain,name=options['host'])
         if h:
             cname_record.host = h[0]
         cname_record.fqdn = fqdn
