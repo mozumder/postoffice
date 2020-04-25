@@ -61,6 +61,14 @@ async def db_lookup(db_pool, query):
             await db_pool.release(conn)
             for record in records:
                 results.append(record)
+        elif query[0] == RR_TYPE_TXT:
+            name = protecc_str(".".join(query[3])).lower()
+            conn = await db_pool.acquire()
+            records = await conn.fetch(f"execute get_txt_record('{name}')")
+            await db_pool.release(conn)
+            for record in records:
+                results.append(record)
+    print(results)
     return results
 
 async def DBConnecter(db_pool_fut, q):
@@ -91,6 +99,12 @@ async def DBConnectInit(conn):
         'RR_TYPE_SOA':RR_TYPE_SOA,
         'RR_TYPE_CNAME':RR_TYPE_CNAME,
         'RR_TYPE_MX':RR_TYPE_MX,
+        'RR_TYPE_TXT':RR_TYPE_TXT,
+        'RR_TYPE_PTR':RR_TYPE_PTR,
+        'RR_TYPE_CAA':RR_TYPE_CAA,
+        'RR_TYPE_SPF':RR_TYPE_SPF,
+        'RR_TYPE_DNAME':RR_TYPE_DNAME,
+        'RR_TYPE_SRV':RR_TYPE_SRV,
     }
     dir = os.path.dirname('dns/include/sql/')
     for file_name in sql_files:

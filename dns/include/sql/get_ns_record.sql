@@ -1,4 +1,4 @@
-DROP FUNCTION IF EXISTS get_ns_record(character varying);
+DROP FUNCTION IF EXISTS get_ns_record(character varying(255));
 CREATE OR REPLACE FUNCTION get_ns_record(
     searchname varchar(255)
     )
