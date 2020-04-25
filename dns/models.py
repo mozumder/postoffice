@@ -529,7 +529,7 @@ class TXT_Record(models.Model):
         null=True, blank=True)
     value = models.CharField(
         verbose_name=_("Value"),
-        max_length=1024,
+        max_length=65535,
         null=True, blank=True)
     ttl = models.IntegerField(
         verbose_name=_("Time-to-Live"),
