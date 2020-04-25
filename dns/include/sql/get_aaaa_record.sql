@@ -5,7 +5,6 @@ CREATE OR REPLACE FUNCTION get_aaaa_record(
 RETURNS TABLE (
     type INT,
     ttl INT,
-    out_ip_address INET,
     domainname VARCHAR(255),
     nsname VARCHAR(255),
     rname VARCHAR(255),
@@ -13,7 +12,8 @@ RETURNS TABLE (
     refresh INT,
     retry INT,
     expiry INT,
-    nxttl INT
+    nxttl INT,
+    out_ip_address INET
 )
 AS
 $BODY$

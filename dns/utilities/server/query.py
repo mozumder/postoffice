@@ -209,8 +209,6 @@ async def Query(pool, data, addr, transport):
                 AA_authoritative_answer = True if results[0][0][3] != None else False
         for i in range(len(queries)):
             query = queries[i]
-            question = query[2] + question_struct.pack(query[0], query[1])
-            questions_data.append(question)
             if len(results) > 0:
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
@@ -219,14 +217,32 @@ async def Query(pool, data, addr, transport):
                         RLENGTH = 4
                         RDATA = record[10].packed
                         print(f'A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]} ttl={record[1]}')
-                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
-                        answers_data.append(response_data)
-                    elif record[0] == RR_TYPE_AAAA:
+                        if query[0] == RR_TYPE_MX:
+                            hostlabel = b''
+                            hostlabels = record[2].split(".")
+                            for label in hostlabels:
+                                hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                            hostlabel = hostlabel + b'\0'
+                            response_data = hostlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            additional_data.append(response_data)
+                        else:
+                            response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            answers_data.append(response_data)
+                    if record[0] == RR_TYPE_AAAA:
                         RLENGTH = 16
                         RDATA = record[10].packed
-                        print(f'A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]} ttl={record[1]}')
-                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
-                        answers_data.append(response_data)
+                        print(f'A IP_Address={record[10]}')
+                        if query[0] == RR_TYPE_MX:
+                            hostlabel = b''
+                            hostlabels = record[2].split(".")
+                            for label in hostlabels:
+                                hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                            hostlabel = hostlabel + b'\0'
+                            response_data = hostlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            additional_data.append(response_data)
+                        else:
+                            response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            answers_data.append(response_data)
                     elif record[0] == RR_TYPE_CNAME:
                         canonicallabel = b''
                         canonicallabels = record[10].split(".")
@@ -240,13 +256,13 @@ async def Query(pool, data, addr, transport):
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_MX:
                         hostlabel = b''
-                        hostlabels = record[10].split(".")
+                        hostlabels = record[11].split(".")
                         for label in hostlabels:
                             hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
                         hostlabel = hostlabel + b'\0'
                         RLENGTH = len(hostlabel) + 2
                         print(f'MX Host={record[10]} ttl={record[1]}')
-                        response_data = answer_label + mx_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH, record[11]) + hostlabel
+                        response_data = answer_label + mx_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH, record[12]) + hostlabel
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_NS:
                         domainlabel = b''
@@ -296,9 +312,12 @@ async def Query(pool, data, addr, transport):
                         else:
                             authority_data.append(response_data)
                 offset = offset + len(queries[i]) + 4
+            question = query[2] + question_struct.pack(query[0], query[1])
+            questions_data.append(question)
 
     ANCOUNT_answers_count = len(answers_data)
     NSCOUNT_authoritative_answers_count = len(authority_data)
+    ARCOUNT_additional_records_count = len(additional_data)
     data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
     for question in questions_data:
         data = data + question
@@ -306,6 +325,8 @@ async def Query(pool, data, addr, transport):
         data = data + answer
     for authority in authority_data:
         data = data + authority
+    for additional in additional_data:
+        data = data + additional
     transport.sendto(data, addr)
 
 
