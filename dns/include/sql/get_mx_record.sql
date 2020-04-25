@@ -13,6 +13,7 @@ RETURNS TABLE (
     retry INT,
     expiry INT,
     nxttl INT,
+    out_ip_address INET,
     out_hostname VARCHAR(255),
     out_preference INT
 )
@@ -50,6 +51,7 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
+        NULL::inet as ip_address,
         dns_mx_record.hostname as hostname,
         dns_mx_record.preference as preference
     FROM
@@ -70,6 +72,7 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
+        NULL::inet as ip_address,
         NULL::varchar(255) as hostname,
         NULL::int as preference
     FROM
@@ -78,6 +81,52 @@ IF FOUND THEN
         dns_mx_record.fqdn = searchname AND
         dns_domain.id = dns_mx_record.domain_id AND
         dns_domain.id = dns_ns_record.domain_id
+    UNION
+    SELECT
+        {RR_TYPE_A} as type,
+        dns_a_record.ttl as ttl,
+        dns_mx_record.hostname as domainname,
+        NULL::varchar(255) as nsname,
+        NULL::varchar(255) as rname,
+        NULL::int as serial,
+        NULL::int as refresh,
+        NULL::int as retry,
+        NULL::int as expiry,
+        NULL::int as nxttl,
+        dns_a_record.ip_address as ip_address,
+        NULL::varchar(255) as hostname,
+        NULL::int as preference
+    FROM
+        dns_a_record,
+        dns_mx_record,
+        dns_domain
+    WHERE
+        dns_mx_record.domain_id = result.founddomain_id AND
+        dns_domain.id = result.founddomain_id AND
+        dns_a_record.fqdn = result.domainname
+    UNION
+    SELECT
+        {RR_TYPE_AAAA} as type,
+        dns_aaaa_record.ttl as ttl,
+        dns_mx_record.hostname as domainname,
+        NULL::varchar(255) as nsname,
+        NULL::varchar(255) as rname,
+        NULL::int as serial,
+        NULL::int as refresh,
+        NULL::int as retry,
+        NULL::int as expiry,
+        NULL::int as nxttl,
+        dns_aaaa_record.ip_address as ip_address,
+        NULL::varchar(255) as hostname,
+        NULL::int as preference
+    FROM
+        dns_aaaa_record,
+        dns_mx_record,
+        dns_domain
+    WHERE
+        dns_mx_record.domain_id = result.founddomain_id AND
+        dns_domain.id = result.founddomain_id AND
+        dns_aaaa_record.fqdn = result.domainname
     ;
 ELSE
     RETURN QUERY
@@ -92,6 +141,7 @@ ELSE
         dns_soa_record.retry as retry,
         dns_soa_record.expiry as expiry,
         dns_soa_record.nxttl as nxttl,
+        NULL::inet as ip_address,
         NULL::varchar(255) as hostname,
         NULL::int as preference
     FROM
