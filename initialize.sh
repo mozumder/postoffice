@@ -1,3 +1,4 @@
+#/bin/sh
 ./manage.py createdomain --email dns@dnsmadeeasy.com mozumder.net 108.51.234.125 ns0.dnsmadeeasy.com ns1.dnsmadeeasy.com ns2.dnsmadeeasy.com ns3.dnsmadeeasy.com ns4.dnsmadeeasy.com
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 admin
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 api
@@ -39,8 +40,7 @@
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 vpn
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 www
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 zinnia
-./manage.py createredirect mozumder.net mail mail2
-./manage.py createredirect mozumder.net mail mail2
+./manage.py createredirect mozumder.net la mail2
 ./manage.py addtxtrecord mozumder.net 'Sendinblue-code:3fe1ac48ac4588d17c0515b589b70bf4'
 ./manage.py addtxtrecord mozumder.net 'v=spf1 a mx ptr include:spf.sendinblue.com +ip4:108.51.234.125 +ip4:83.136.180.204 -all'
 ./manage.py addtxtrecord mozumder.net 'google-site-verification=Fi4VXVWVF8D0njI1JTUbXzKpQRGwYbPw6tgYUCdW5xc'

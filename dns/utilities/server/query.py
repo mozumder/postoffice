@@ -31,23 +31,23 @@ async def Query(pool, data, addr, transport):
     # FIXME: Check NSCOUNT_authoritative_answers_count upper and lower limit
     # FIXME: Check ARCOUNT_additional_records_count upper and lower limit
     # FIXME: Check over/under message length
-    hexdump.hexdump(data)
-    print(f'HEADER: Starting byte 1')
+#    hexdump.hexdump(data)
+#    print(f'HEADER: Starting byte 1')
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
-    print(f'  {ID_message_id=}')
-    print(f'  {QR_response=}')
-    print(f'  {OPCODE_operation=} ({OPCODE[OPCODE_LOOKUP[OPCODE_operation]]})')
-    print(f'  {AA_authoritative_answer=}')
-    print(f'  {TC_truncation=}')
-    print(f'  {RD_recursion_desired=}')
-    print(f'  {RA_recursion_available=}')
-    print(f'  {AD_authentic_data=}')
-    print(f'  {CD_checking_disabled=}')
-    print(f'  {RCODE_response_code=} ({RCODE[RCODE_LOOKUP[RCODE_response_code]]})')
-    print(f'  {QDCOUNT_questions_count=}')
-    print(f'  {ANCOUNT_answers_count=}')
-    print(f'  {NSCOUNT_authoritative_answers_count=}')
-    print(f'  {ARCOUNT_additional_records_count=}')
+#    print(f'  {ID_message_id=}')
+#    print(f'  {QR_response=}')
+#    print(f'  {OPCODE_operation=} ({OPCODE[OPCODE_LOOKUP[OPCODE_operation]]})')
+#    print(f'  {AA_authoritative_answer=}')
+#    print(f'  {TC_truncation=}')
+#    print(f'  {RD_recursion_desired=}')
+#    print(f'  {RA_recursion_available=}')
+#    print(f'  {AD_authentic_data=}')
+#    print(f'  {CD_checking_disabled=}')
+#    print(f'  {RCODE_response_code=} ({RCODE[RCODE_LOOKUP[RCODE_response_code]]})')
+#    print(f'  {QDCOUNT_questions_count=}')
+#    print(f'  {ANCOUNT_answers_count=}')
+#    print(f'  {NSCOUNT_authoritative_answers_count=}')
+#    print(f'  {ARCOUNT_additional_records_count=}')
     names = {}
     offset = 12
     question_label_list = []
@@ -64,22 +64,22 @@ async def Query(pool, data, addr, transport):
     additionals = []
     options = []
     for c in range(QDCOUNT_questions_count):
-        print(f'QUESTION NAME: Starting byte {offset+1}')
+#        print(f'QUESTION NAME: Starting byte {offset+1}')
         question_label_list = []
         namestart = offset
         while data[offset] != 0:
             if data[offset] & 192 == 0:
                 question_label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
                 offset = offset + data[offset] + 1
-        print(f'{question_label_list=}')
+#        print(f'{question_label_list=}')
         names[namestart] = question_label_list
         offset = offset + 1
-        print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
+#        print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
         qtype, qclass = question_struct.unpack(data[offset:offset+4])
         queries.append((qtype, qclass, data[namestart:offset], question_label_list))
         offset = offset + 4
     for c in range(ANCOUNT_answers_count):
-        print(f'ANSWER NAME: Starting byte {offset+1}')
+#        print(f'ANSWER NAME: Starting byte {offset+1}')
         answer_label_list = []
         namestart = offset
         while data[offset] != 0 or data[offset]:
@@ -91,12 +91,12 @@ async def Query(pool, data, addr, transport):
         if answer_label_list:
             names[namestart] = answer_label_list
         offset = offset + 1
-        print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
+#        print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
         atype, aclass, attl, alength = answer_struct.unpack(data[offset:offset+10])
         answers.append((answer_label_list, atype, aclass, attl, alength, data[offset+10:offset+10+alength]))
         offset = offset + 10 + alength
     for c in range(NSCOUNT_authoritative_answers_count):
-        print(f'AUTHORITY NAME: Starting byte {offset+1}')
+#        print(f'AUTHORITY NAME: Starting byte {offset+1}')
         authority_label_list = []
         namestart = offset
         while data[offset] != 0:
@@ -108,12 +108,12 @@ async def Query(pool, data, addr, transport):
         if authority_label_list:
             names[namestart] = authority_label_list
         offset = offset + 1
-        print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
+#        print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
         ntype, nclass, nttl, nlength = answer_struct.unpack(data[offset:offset+10])
         authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
         offset = offset + 10 + nlength
     for c in range(ARCOUNT_additional_records_count):
-        print(f'ADDITIONAL NAME: Starting byte {offset+1}')
+#        print(f'ADDITIONAL NAME: Starting byte {offset+1}')
         additional_label_list = []
         namestart = offset
         while data[offset] != 0:
@@ -125,51 +125,51 @@ async def Query(pool, data, addr, transport):
         if additional_label_list:
             names[namestart] = additional_label_list
         offset = offset + 1
-        print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
+#        print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
         xtype, xclass, xttl, xlength = answer_struct.unpack(data[offset:offset+10])
         additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
         offset = offset + 10 + xlength
 
     for record in additionals:
         if record[1] == 41:
-            print(f'OPT EDNS')
+#            print(f'OPT EDNS')
             xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt_struct.unpack(record[4])
             OPT_XRCODE = xrcode << 4 | RCODE_response_code
             options.append((record[2],OPT_XRCODE,EDNS_version,DO_DNSSEC_Answer_OK,record[5],data))
 
-    for record in queries:
-        print(f'QUERY:')
-        print(f'  label={record[2]}')
-        print(f'  type={record[0]} ({RR_TYPE[RR_TYPE_LOOKUP[record[0]]]})')
-        print(f'  class={record[1]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[1]]]})')
-    for record in answers:
-        print(f'ANSWER')
-        print(f'  label={record[0]}')
-        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
-        print(f'  ttl={record[3]}')
-        print(f'  data_length= {record[4]}')
-    for record in authorities:
-        print(f'AUTHORITY')
-        print(f'  label={record[0]}')
-        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
-        print(f'  ttl={record[3]}')
-        print(f'  data_length= {record[4]}')
-    for record in additionals:
-        print(f'ADDITIONAL')
-        print(f'  label={record[0]}')
-        print(f'  type=={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
-        print(f'  ttl={record[3]}')
-        print(f'  data_length={record[5]}')
-    for record in options:
-        print(f'OPTIONS')
-        print(f'  udp_payload_size={record[0]}')
-        print(f'  OPT_XRCODE={record[1]}')
-        print(f'  EDNS_version={record[2]}')
-        print(f'  DO_DNSSEC_Answer_OK={record[3]}')
-        print(f'  length={record[4]}')
+#    for record in queries:
+#        print(f'QUERY:')
+#        print(f'  label={record[2]}')
+#        print(f'  type={record[0]} ({RR_TYPE[RR_TYPE_LOOKUP[record[0]]]})')
+#        print(f'  class={record[1]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[1]]]})')
+#    for record in answers:
+#        print(f'ANSWER')
+#        print(f'  label={record[0]}')
+#        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+#        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+#        print(f'  ttl={record[3]}')
+#        print(f'  data_length= {record[4]}')
+#    for record in authorities:
+#        print(f'AUTHORITY')
+#        print(f'  label={record[0]}')
+#        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+#        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+#        print(f'  ttl={record[3]}')
+#        print(f'  data_length= {record[4]}')
+#    for record in additionals:
+#        print(f'ADDITIONAL')
+#        print(f'  label={record[0]}')
+#        print(f'  type=={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+#        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+#        print(f'  ttl={record[3]}')
+#        print(f'  data_length={record[5]}')
+#    for record in options:
+#        print(f'OPTIONS')
+#        print(f'  udp_payload_size={record[0]}')
+#        print(f'  OPT_XRCODE={record[1]}')
+#        print(f'  EDNS_version={record[2]}')
+#        print(f'  DO_DNSSEC_Answer_OK={record[3]}')
+#        print(f'  length={record[4]}')
     
     # MARK: DB Lookup
     tasks =  [db_lookup(pool,query) for query in queries]
@@ -216,14 +216,14 @@ async def Query(pool, data, addr, transport):
                     if record[0] == RR_TYPE_A:
                         RLENGTH = 4
                         RDATA = record[10].packed
-                        print(f'A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]} ttl={record[1]}')
+                        print(f'  A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
                         if query[0] == RR_TYPE_MX:
-                            hostlabel = b''
-                            hostlabels = record[2].split(".")
-                            for label in hostlabels:
-                                hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                            hostlabel = hostlabel + b'\0'
-                            response_data = hostlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            name = b''
+                            labels = record[2].split(".")
+                            for label in labels:
+                                name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                            name = name + b'\0'
+                            response_data = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
                             additional_data.append(response_data)
                         else:
                             response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
@@ -231,102 +231,100 @@ async def Query(pool, data, addr, transport):
                     if record[0] == RR_TYPE_AAAA:
                         RLENGTH = 16
                         RDATA = record[10].packed
-                        print(f'A IP_Address={record[10]}')
+                        print(f'  AAAA IP_Address={record[10]}')
                         if query[0] == RR_TYPE_MX:
-                            hostlabel = b''
-                            hostlabels = record[2].split(".")
-                            for label in hostlabels:
-                                hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                            hostlabel = hostlabel + b'\0'
-                            response_data = hostlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            name = b''
+                            labels = record[2].split(".")
+                            for label in labels:
+                                name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                            name = name + b'\0'
+                            response_data = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
                             additional_data.append(response_data)
                         else:
                             response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
                             answers_data.append(response_data)
                     elif record[0] == RR_TYPE_CNAME:
-                        canonicallabel = b''
-                        canonicallabels = record[10].split(".")
-                        for label in canonicallabels:
-                            canonicallabel = canonicallabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        canonicallabel = canonicallabel + b'\0'
-                        RDATA = canonicallabel
-                        RLENGTH = len(canonicallabel)
-                        print(f'CNAME Name={record[10]} ttl={record[1]}')
-                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        name = b''
+                        labels = record[10].split(".")
+                        for label in labels:
+                            name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        name = name + b'\0'
+                        RLENGTH = len(name)
+                        print(f'  CNAME Name={record[10]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + name
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_PTR:
-                        hostlabel = b''
-                        hostlabels = record[10].split(".")
-                        for label in hostlabels:
-                            hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        hostlabel = hostlabel + b'\0'
-                        RDATA = hostlabel
-                        RLENGTH = len(hostlabel)
-                        print(f'PTR Name={record[10]} ttl={record[1]}')
-                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        name = b''
+                        labels = record[10].split(".")
+                        for label in labels:
+                            name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        name = name + b'\0'
+                        RLENGTH = len(name)
+                        print(f'  PTR Name={record[10]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + name
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_TXT:
-                        txtstring = b''
-                        txtstrings = [record[10][i:i+255] for i in range(0, len(record[10]), 255)]
-                        for label in txtstrings:
-                            txtstring = txtstring + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        RDATA = txtstring
-                        RLENGTH = len(txtstring)
-                        print(f'TXT Name={record[10]} ttl={record[1]}')
-                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        string = b''
+                        strings = [record[10][i:i+255] for i in range(0, len(record[10]), 255)]
+                        for label in strings:
+                            string = string + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        RLENGTH = len(string)
+                        print(f'  TXT Name={record[10]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + string
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_MX:
-                        hostlabel = b''
-                        hostlabels = record[11].split(".")
-                        for label in hostlabels:
-                            hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        hostlabel = hostlabel + b'\0'
-                        RLENGTH = len(hostlabel) + 2
-                        print(f'MX Host={record[10]} ttl={record[1]}')
-                        response_data = answer_label + mx_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH, record[12]) + hostlabel
+                        name = b''
+                        labels = record[11].split(".")
+                        for label in labels:
+                            name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        name = name + b'\0'
+                        RLENGTH = len(name) + 2
+                        print(f'  MX Host={record[11]}')
+                        response_data = answer_label + mx_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH, record[12]) + name
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_NS:
-                        domainlabel = b''
-                        domainnames = record[2].split(".")
-                        for label in domainnames:
-                            domainlabel = domainlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        domainlabel = domainlabel + b'\0'
-                        domainnameoffset = query[2].find(domainlabel)
+                        dname = b''
+                        labels = record[2].split(".")
+                        for label in labels:
+                            dname = dname + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        dname = dname + b'\0'
+                        domainnameoffset = query[2].find(dname)
                         if domainnameoffset != -1:
                             domainlabel = label_struct.pack(offset+domainnameoffset)
-                        nslabel = b''
-                        nslabels = record[3].split(".")
-                        for label in nslabels:
-                            nslabel = nslabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        nslabel = nslabel + b'\0'
-                        RLENGTH = len(nslabel)
-                        print(f'NS Name={record[3]} ttl={record[1]}')
-                        response_data = domainlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + nslabel
+                        name = b''
+                        labels = record[3].split(".")
+                        for label in labels:
+                            name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        name = name + b'\0'
+                        RLENGTH = len(name)
+                        print(f'  NS Name={record[3]}')
+                        response_data = dname + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + name
                         if query[0] == RR_TYPE_NS:
                             answers_data.append(response_data)
                         else:
                             authority_data.append(response_data)
                     elif record[0] == RR_TYPE_SOA:
-                        domainlabel = b''
-                        domainnames = record[2].split(".")
-                        for label in domainnames:
-                            domainlabel = domainlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        domainlabel = domainlabel + b'\0'
-                        domainnameoffset = query[2].find(domainlabel)
+                        print(f'  SOA Domain={record[2]} NS={record[3]} Mailbox={record[4]}')
+                        dname = b''
+                        labels = record[2].split(".")
+                        for label in labels:
+                            dname = dname + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        dname = dname + b'\0'
+                        domainnameoffset = query[2].find(dname)
                         if domainnameoffset != -1:
                             domainlabel = label_struct.pack(offset+domainnameoffset)
-                        nslabel = b''
-                        nslabels = record[3].split(".")
-                        for label in nslabels:
-                            nslabel = nslabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        nslabel = nslabel + b'\0'
-                        mailboxlabel = b''
-                        mailboxlabels = record[4].replace('@','.').split(".")
-                        for label in mailboxlabels:
-                            mailboxlabel = mailboxlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
-                        mailboxlabel = mailboxlabel + b'\0'
-                        RLENGTH = len(nslabel) + len(mailboxlabel) + 20
-                        response_data = domainlabel + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + nslabel + mailboxlabel + soa_struct.pack(record[5],record[6],record[7],record[8],record[9])
+                        nsname = b''
+                        labels = record[3].split(".")
+                        for label in labels:
+                            nsname = nsname + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        nsname = nsname + b'\0'
+                        mbname = b''
+                        labels = record[4].replace('@','.').split(".")
+                        for label in labels:
+                            mbname = mbname + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        mbname = mbname + b'\0'
+                        RLENGTH = len(nsname) + len(mbname) + 20
+                        response_data = dname + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + nsname + mbname + soa_struct.pack(record[5],record[6],record[7],record[8],record[9])
                         if query[0] == RR_TYPE_SOA and domainnameoffset == 0:
                             answers_data.append(response_data)
                         else:

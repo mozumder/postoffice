@@ -17,6 +17,6 @@ class DNSServerProtocol:
 
     def datagram_received(self, data, addr):
         # TODO: Enable multiprocessing for new datagrams
-        print(f'Got datagram from {addr} with length {len(data)}')
+#        print(f'Got datagram from {addr} with length {len(data)}')
         future = asyncio.ensure_future(Query(self.db_pool,data, addr, self.transport))
 
