@@ -16,7 +16,8 @@ def protecc_str(name:str):
 
 async def db_lookup(db_pool, query):
     # FIXME: Capitalized DNS queries.
-    print(f'Got query: name={query[2]}, type={RR_TYPE[RR_TYPE_LOOKUP[query[0]]]}, class={DNS_CLASS[DNS_CLASS_LOOKUP[query[1]]]}')
+    qstring = ".".join(query[3])
+    print(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {qstring}')
     results = []
     if query[1] == DNS_CLASS_INTERNET:
         if query[0] == RR_TYPE_A:
@@ -75,7 +76,7 @@ async def db_lookup(db_pool, query):
             await db_pool.release(conn)
             for record in records:
                 results.append(record)
-    print(results)
+#    print(results)
     return results
 
 async def DBConnecter(db_pool_fut, q):
