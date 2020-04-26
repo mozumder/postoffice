@@ -579,13 +579,13 @@ class PTR_Record(models.Model):
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
-    system = models.CharField(
+    hostname = models.CharField(
         #If the value ends in a dot, it is for an external domain.
-        verbose_name=_("System"),
+        verbose_name=_("Host Name"),
         max_length=64)
-    system_host = models.ForeignKey(
+    host = models.ForeignKey(
         Host,
-        verbose_name=_("System Host"),
+        verbose_name=_("Host"),
         null=True, blank=True,
         on_delete=models.CASCADE)
     ttl = models.IntegerField(

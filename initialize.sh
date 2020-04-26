@@ -51,3 +51,4 @@
 ./manage.py addhost -dyn futureclaw.com 108.51.234.125 www
 ./manage.py addmailexchange futureclaw.com mail.mozumder.net
 
+./manage.py createzone --email info@mozumder.net 10.IN-ADDR.ARPA ns.mozumder.net

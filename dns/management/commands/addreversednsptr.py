@@ -25,40 +25,45 @@ class Command(BaseCommand):
             help='Zone (domain) that host is under. This is a name under "in-addr.arpa."',
             )
         parser.add_argument(
-            'ip_address',
+            'name',
             nargs='?',
             action='store',
             default=None,
-            help="IP Address to store",
+            help="IP Address name segments",
             )
         parser.add_argument(
             'host',
             nargs='?',
             action='store',
             default=None,
-            help="Host name for IP address",
+            help="Host name for reverse DNS answer",
             )
 
     def handle(self, *args, **options):
         if options['zone'] == None:
             raise CommandError("Need a zone (domain).")
         else:
-            domainname = options['domain']
+            zone = options['zone']
         if options['host'] == None:
-            raise CommandError("Need an Canonical Name to alias.")
-        if options['alias'] == None:
-            raise CommandError("Need an Alias Name.")
+            raise CommandError("Need a hostname.")
+        if options['name'] == None:
+            raise CommandError("Need a Name.")
         
-        fqdn = options['alias'] + "." + domainname
+        fqdn = options['name'] + "." + zone
 
+        hostname = options['host'].split(".")[0]
+        hostdomainname = ".".join(options['host'].split(".")[1:])
         try:
-            domain = Domain.objects.get(name=options['domain'])
+            host_domain = Domain.objects.get(name__contains='%' + hostdomainname)
         except:
-            raise CommandError('Domain not found. Exiting')
+            host_domain = None
+        try:
+            zone = Domain.objects.get(name__icontains=zone)
+        except:
+            raise CommandError("Zone not found.")
 
-        canonical_name = options['zone'] + '.' + options['domain']
-        ptr_record, ptr_created = PTR_Record.objects.get_or_create(domain=domain, name=options['alias'], canonical_name = canonical_name)
-        h = Host.objects.filter(domain=domain,name=options['host'])
+        ptr_record, ptr_created = PTR_Record.objects.get_or_create(domain=zone, hostname=options['host'], name = fqdn)
+        h = Host.objects.filter(domain=host_domain, name=hostname)
         if h:
             ptr_record.host = h[0]
         ptr_record.fqdn = fqdn
@@ -66,9 +71,9 @@ class Command(BaseCommand):
         ptr_record.source = SOURCE_SCRIPT
         ptr_record.save()
         if ptr_created:
-            print(f'Created ptr Record {ptr_record} under domain {domain}.')
+            print(f'Created PTR Record {ptr_record} under zone {zone}.')
         else:
-            print(f'ptr Record {ptr_record} under domain {domain} updated.')
+            print(f'PTR Record {ptr_record} under zone {zone} updated.')
 
 
 

@@ -275,7 +275,7 @@ class PTR_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'name', 'system', 'ttl', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'name', 'hostname', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
@@ -283,8 +283,8 @@ class PTR_RecordAdmin(admin.ModelAdmin):
             ('domain'),
             ('name'),
             ('fqdn'),
-            ('system'),
-            ('system_host'),
+            ('hostname'),
+            ('host'),
             ('ttl'),
             ('serial'),
             ('source'),
