@@ -5,10 +5,10 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from dns.models import Domain, A_Record, AAAA_Record, SOA_Record, NS_Record, SOURCE_SCRIPT
+from dns.models import Domain, SOA_Record, NS_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
-    help = ("Create a domain with username as its owner")
+    help = ("Create a zone with username as its owner")
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -22,12 +22,6 @@ class Command(BaseCommand):
             action='store',
             default=None,
             help="Email address of the person responsible for this domain and to which email may be sent to report errors or problems. If not set, will use email address of user. This is RNAME in the domain's SOA record.",
-            )
-        parser.add_argument(
-            '-6', '--ipv6',
-            action='store',
-            default=None,
-            help="IPv6 Address",
             )
         parser.add_argument(
             '-ttl',
@@ -65,23 +59,10 @@ class Command(BaseCommand):
             help="SOA record NX field time in seconds redefined by RFC 2308 to be the negative caching time - the time a NAME ERROR = NXDOMAIN result may be cached by any resolver. The maximum value allowed by RFC 2308 for this parameter is 3 hours (10800 seconds). Note: This value was historically (in BIND 4 and 8) used to hold the default TTL value for any RR from the zone that did not specify an explicit TTL. RFC 2308 (and BIND 9) uses the $TTL directive as the zone default TTL. You may find older documentation or zone file configurations which reflect the old usage",
             )
         parser.add_argument(
-            '-dyn','--dynamic_ip',
-            action='store_true',
-            dest='dynamic_ip',
-            default=False,
-            help="Allow IP address updates with Dynamic DNS",
-            )
-        parser.add_argument(
             'name',
             action='store',
             default=None,
-            help="Domain name to be created. This is MNAME of the domain's SOA record.",
-            )
-        parser.add_argument(
-            'ip_address',
-            action='store',
-            default=None,
-            help="Domain's A Record IP Address",
+            help="Zone to be created. This is MNAME of the domain's SOA record.",
             )
         parser.add_argument(
             'name_server',
@@ -97,10 +78,8 @@ class Command(BaseCommand):
             raise CommandError("Need a Domain Name.")
         else:
             domainname = options['name']
-        if options['ip_address'] == None:
-            raise CommandError("Need an IP Address.")
         if options['name_server'] == None:
-            raise CommandError("Need Name Servers.")
+            raise CommandError("Need a Name Server.")
         if options['username'] == None:
             user = User.objects.all()[0]
             print(f'Using default user: {user}')
@@ -118,18 +97,6 @@ class Command(BaseCommand):
             print(f'Created domain {d} with owner {d.owner}.')
         else:
             print(f'Domain {d} with owner {d.owner} already exists.')
-
-        a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None, ip_address=options['ip_address'])
-        a_record.host = None
-        a_record.fqdn = domainname
-        a_record.ttl = options['ttl']
-        a_record.dynamic_ip = options['dynamic_ip']
-        a_record.source = SOURCE_SCRIPT
-        a_record.save()
-        if a_created:
-            print(f'Created A Record {a_record} under domain {d}.')
-        else:
-            print(f'A Record {a_record} under domain {d} updated.')
 
         soa_record, soa_created = SOA_Record.objects.get_or_create(domain=d)
         soa_record.host = None
@@ -159,18 +126,4 @@ class Command(BaseCommand):
                 print(f'Created NS Record {ns_record} under domain {d}.')
             else:
                 print(f'NS Record {ns_record} under domain {d} updated.')
-
-
-        if options['ipv6']:
-            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=d, name=None, ip_address = options['ipv6'])
-            aaaa_record.host = h
-            aaaa_record.fqdn = domainname
-            aaaa_record.ttl = options['ttl']
-            aaaa_record.source = SOURCE_SCRIPT
-            aaaa_record.save()
-            if aaaa_created:
-                print(f'Created AAAA Record {aaaa_record} under domain {domain} with host {h}.')
-            else:
-                print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
-
 

@@ -254,6 +254,17 @@ async def Query(pool, data, addr, transport):
                         print(f'CNAME Name={record[10]} ttl={record[1]}')
                         response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
                         answers_data.append(response_data)
+                    elif record[0] == RR_TYPE_PTR:
+                        hostlabel = b''
+                        hostlabels = record[10].split(".")
+                        for label in hostlabels:
+                            hostlabel = hostlabel + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        hostlabel = hostlabel + b'\0'
+                        RDATA = hostlabel
+                        RLENGTH = len(hostlabel)
+                        print(f'PTR Name={record[10]} ttl={record[1]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                        answers_data.append(response_data)
                     elif record[0] == RR_TYPE_TXT:
                         txtstring = b''
                         txtstrings = [record[10][i:i+255] for i in range(0, len(record[10]), 255)]

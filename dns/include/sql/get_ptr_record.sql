@@ -13,7 +13,7 @@ RETURNS TABLE (
     retry INT,
     expiry INT,
     nxttl INT,
-    out_canonical_name VARCHAR(255)
+    out_hostname  VARCHAR(255)
 )
 AS
 $BODY$
@@ -23,7 +23,7 @@ BEGIN
 
 SELECT
     dns_ptr_record.ttl as ttl,
-    dns_ptr_record.canonical_name as canonical_name,
+    dns_ptr_record.hostname as hostname ,
     dns_domain.name as domainname,
     dns_domain.id as founddomain_id
 INTO
@@ -33,7 +33,7 @@ FROM
     dns_domain
 WHERE
     dns_domain.id = dns_ptr_record.domain_id AND
-    dns_ptr_record.fqdn = searchname
+    dns_ptr_record.fqdn ILIKE searchname
 ;
 IF FOUND THEN
     RETURN QUERY
@@ -48,7 +48,7 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        result.canonical_name as canonical_name
+        result.hostname  as hostname
     FROM
         dns_ptr_record,
         dns_domain
@@ -67,7 +67,7 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        NULL::varchar(255) as canonical_name
+        NULL::varchar(255) as hostname
     FROM
         dns_domain, dns_ptr_record, dns_ns_record
     WHERE
@@ -88,7 +88,7 @@ ELSE
         dns_soa_record.retry as retry,
         dns_soa_record.expiry as expiry,
         dns_soa_record.nxttl as nxttl,
-        NULL::varchar(255) as canonical_name
+        NULL::varchar(255) as hostname
     FROM
         dns_domain, dns_soa_record
     WHERE
