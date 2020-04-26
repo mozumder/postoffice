@@ -68,6 +68,13 @@ async def db_lookup(db_pool, query):
             await db_pool.release(conn)
             for record in records:
                 results.append(record)
+        elif query[0] == RR_TYPE_PTR:
+            name = protecc_str(".".join(query[3])).lower()
+            conn = await db_pool.acquire()
+            records = await conn.fetch(f"execute get_ptr_record('{name}')")
+            await db_pool.release(conn)
+            for record in records:
+                results.append(record)
     print(results)
     return results
 
