@@ -207,12 +207,15 @@ async def Query(pool, data, addr, transport):
         if len(results) > 0:
             if len(results[0]) > 0:
                 AA_authoritative_answer = True if results[0][0][3] != None else False
+        RCODE_response_code = 3
         for i in range(len(queries)):
             query = queries[i]
             if len(results) > 0:
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
+                    if record[0] == query[0]:
+                        RCODE_response_code = 0
                     if record[0] == RR_TYPE_A:
                         RLENGTH = 4
                         RDATA = record[10].packed
