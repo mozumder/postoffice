@@ -13,8 +13,7 @@ RETURNS TABLE (
     refresh INT,
     retry INT,
     expiry INT,
-    nxttl INT,
-    out_ip_address INET
+    nxttl INT
 )
 AS
 $BODY$
@@ -23,32 +22,33 @@ DECLARE
 BEGIN
 
 SELECT
-    exists(
-        SELECT 1
-        FROM
-            dns_a_record,
-            dns_aaaa_record,
-            dns_cname_record
-        WHERE
-            dns_a_record.fqdn = searchname OR
-            dns_aaaa_record.fqdn = searchname OR
-            dns_cname_record.fqdn = searchname
-        ) as nxdomain,
-    dns_domain.id as found_domain_id
+    dns_domain.id as found_domain_id,
+    dns_domain.name as domainname
 INTO
     result
 FROM
-    dns_domain, dns_soa_record, dns_ns_record
+    dns_domain
 WHERE
-    searchname = dns_domain.name AND
-    dns_domain.id = dns_soa_record.domain_id AND
-    dns_domain.id = dns_ns_record.domain_id
+    searchname = dns_domain.name
+ORDER BY
+    length(dns_domain.name) DESC
+LIMIT 1
 ;
 
 IF FOUND THEN RETURN QUERY
     SELECT
         {RR_TYPE_NS} as type,
-        result.nxdomain as nxdomain,
+        exists(
+            SELECT 1
+            FROM
+                dns_a_record,
+                dns_aaaa_record,
+                dns_cname_record
+            WHERE
+                dns_a_record.fqdn = searchname OR
+                dns_aaaa_record.fqdn = searchname OR
+                dns_cname_record.fqdn = searchname
+            ) as nxdomain,
         dns_domain.name as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
@@ -57,13 +57,11 @@ IF FOUND THEN RETURN QUERY
         NULL::int as refresh,
         NULL::int as retry,
         NULL::int as expiry,
-        NULL::int as nxttl,
-        NULL::inet as ip_address
+        NULL::int as nxttl
     FROM
-        dns_domain, dns_soa_record, dns_ns_record
+        dns_domain, dns_ns_record
     WHERE
         result.found_domain_id = dns_domain.id AND
-        result.found_domain_id = dns_soa_record.domain_id AND
         result.found_domain_id = dns_ns_record.domain_id
     ;
 ELSE
@@ -89,8 +87,7 @@ ELSE
         dns_soa_record.refresh as refresh,
         dns_soa_record.retry as retry,
         dns_soa_record.expiry as expiry,
-        dns_soa_record.nxttl as nxttl,
-        NULL::inet as ip_address
+        dns_soa_record.nxttl as nxttl
     FROM
         dns_domain, dns_soa_record
     WHERE

@@ -217,9 +217,8 @@ async def Query(pool, data, addr, transport):
                     if record[1] == True:
                         RCODE_response_code = 0
                     if record[0] == RR_TYPE_A:
-                        print(f'Exists: {record[1]}')
                         RLENGTH = 4
-                        RDATA = record[11].packed
+                        RDATA = record[12].packed
                         print(f'  A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
                         if query[0] == RR_TYPE_MX:
                             name = b''
@@ -230,12 +229,20 @@ async def Query(pool, data, addr, transport):
                             response_data = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             additional_data.append(response_data)
                         else:
-                            response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            if record[11] != None:
+                                cname_label = b''
+                                labels = record[11].split(".")
+                                for label in labels:
+                                    cname_label = cname_label + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                                cname_label = cname_label + b'\0'
+                                response_data = cname_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
+                            else:
+                                response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             answers_data.append(response_data)
-                    if record[0] == RR_TYPE_AAAA:
+                    elif record[0] == RR_TYPE_AAAA:
                         RLENGTH = 16
-                        RDATA = record[11].packed
-                        print(f'  AAAA IP_Address={record[11]}')
+                        RDATA = record[12].packed
+                        print(f'  AAAA IP_Address={record[12]}')
                         if query[0] == RR_TYPE_MX:
                             name = b''
                             labels = record[2].split(".")
@@ -245,11 +252,19 @@ async def Query(pool, data, addr, transport):
                             response_data = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             additional_data.append(response_data)
                         else:
-                            response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], RLENGTH) + RDATA
+                            if record[11] != None:
+                                cname_label = b''
+                                labels = record[11].split(".")
+                                for label in labels:
+                                    cname_label = cname_label + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                                cname_label = cname_label + b'\0'
+                                response_data = cname_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
+                            else:
+                                response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             answers_data.append(response_data)
                     elif record[0] == RR_TYPE_CNAME:
                         name = b''
-                        labels = record[12].split(".")
+                        labels = record[11].split(".")
                         for label in labels:
                             name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
                         name = name + b'\0'
@@ -278,12 +293,12 @@ async def Query(pool, data, addr, transport):
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_MX:
                         name = b''
-                        labels = record[12].split(".")
+                        labels = record[11].split(".")
                         for label in labels:
                             name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
                         name = name + b'\0'
                         RLENGTH = len(name) + 2
-                        print(f'  MX Host={record[12]}')
+                        print(f'  MX Host={record[11]}')
                         response_data = answer_label + mx_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH, record[13]) + name
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_NS:
