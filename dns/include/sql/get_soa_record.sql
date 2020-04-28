@@ -13,8 +13,7 @@ RETURNS TABLE (
     refresh INT,
     retry INT,
     expiry INT,
-    nxttl INT,
-    out_ip_address INET
+    nxttl INT
 )
 AS
 $BODY$
@@ -68,8 +67,7 @@ IF FOUND THEN
         result.refresh as refresh,
         result.retry as retry,
         result.expiry as expiry,
-        result.nxttl as nxttl,
-        NULL::inet as ip_address
+        result.nxttl as nxttl
     UNION
     SELECT
         {RR_TYPE_NS} as type,
@@ -82,13 +80,11 @@ IF FOUND THEN
         NULL::int as refresh,
         NULL::int as retry,
         NULL::int as expiry,
-        NULL::int as nxttl,
-        NULL::inet as ip_address
+        NULL::int as nxttl
     FROM
-        dns_domain, dns_soa_record, dns_ns_record
+        dns_domain, dns_ns_record
     WHERE
         searchname = dns_domain.name AND
-        dns_domain.id = dns_soa_record.domain_id AND
         dns_domain.id = dns_ns_record.domain_id
     ;
 END IF;

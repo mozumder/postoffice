@@ -14,43 +14,39 @@ RETURNS TABLE (
     retry INT,
     expiry INT,
     nxttl INT,
-    out_ip_address INET
+    out_ip_address INET,
+    out_cname VARCHAR(255)
 )
 AS
 $BODY$
 DECLARE
+    cname_check RECORD;
     result RECORD;
 BEGIN
 
 SELECT
-    exists(
-        SELECT 1
-        FROM
-            dns_a_record,
-            dns_aaaa_record,
-            dns_cname_record
-        WHERE
-            dns_a_record.fqdn = searchname OR
-            dns_aaaa_record.fqdn = searchname OR
-            dns_cname_record.fqdn = searchname
-        ) as nxdomain,
-    dns_domain.name as domainname,
-    dns_domain.id as founddomain_id
+    dns_cname_record.canonical_name as cname,
+    dns_cname_record.ttl as ttl,
+    dns_domain.id as founddomain_id,
+    dns_domain.name as domainname
 INTO
-    result
+    cname_check
 FROM
-    dns_aaaa_record,
+    dns_cname_record
+LEFT OUTER JOIN
     dns_domain
+ON
+    dns_domain.id = dns_cname_record.domain_id
 WHERE
-    dns_domain.id = dns_aaaa_record.domain_id AND
-    dns_aaaa_record.fqdn = searchname
+    dns_cname_record.fqdn = searchname
 ;
+
 IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_AAAA} as type,
-        result.nxdomain as nxdomain,
-        result.domainname as domainname,
+        true as nxdomain,
+        cname_check.domainname as domainname,
         dns_aaaa_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
@@ -59,18 +55,32 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        dns_aaaa_record.ip_address as ip_address
+        dns_aaaa_record.ip_address as ip_address,
+        cname_check.cname as cname
     FROM
-        dns_aaaa_record,
-        dns_domain
+        dns_aaaa_record
     WHERE
-        dns_domain.id = result.founddomain_id AND
-        dns_aaaa_record.fqdn = searchname
+        dns_aaaa_record.fqdn = cname_check.cname
+    UNION
+    SELECT
+        {RR_TYPE_CNAME} as type,
+        true as nxdomain,
+        cname_check.domainname as domainname,
+        cname_check.ttl as ttl,
+        NULL::varchar(255) as nsname,
+        NULL::varchar(255) as rname,
+        NULL::int as serial,
+        NULL::int as refresh,
+        NULL::int as retry,
+        NULL::int as expiry,
+        NULL::int as nxttl,
+        NULL::inet as ip_address,
+        cname_check.cname as cname
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        result.nxdomain as nxdomain,
-        dns_domain.name as domainname,
+        true as nxdomain,
+        cname_check.domainname as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
@@ -79,54 +89,105 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        NULL::inet as ip_address
+        NULL::inet as ip_address,
+        NULL::varchar(255) as cname
     FROM
-        dns_domain, dns_aaaa_record, dns_ns_record
+        dns_ns_record
     WHERE
-        dns_aaaa_record.fqdn = searchname AND
-        dns_domain.id = dns_aaaa_record.domain_id AND
-        dns_domain.id = dns_ns_record.domain_id
+        cname_check.founddomain_id = dns_ns_record.domain_id
     ;
 ELSE
-    RETURN QUERY
     SELECT
-        {RR_TYPE_SOA} as type,
-    exists(
-        SELECT 1
-        FROM
-            dns_a_record,
-            dns_aaaa_record,
-            dns_cname_record
-        WHERE
-            dns_a_record.fqdn = searchname OR
-            dns_aaaa_record.fqdn = searchname OR
-            dns_cname_record.fqdn = searchname
-        ) as nxdomain,
-        dns_domain.name as domainname,
-        dns_soa_record.ttl as ttl,
-        dns_soa_record.nameserver as nsname,
-        dns_soa_record.rname as rname,
-        dns_soa_record.serial as serial,
-        dns_soa_record.refresh as refresh,
-        dns_soa_record.retry as retry,
-        dns_soa_record.expiry as expiry,
-        dns_soa_record.nxttl as nxttl,
-        NULL::inet as ip_address
+        dns_aaaa_record.id as found_aaaa_record_id,
+        dns_aaaa_record.ip_address as ip_address,
+        dns_aaaa_record.ttl as ttl,
+        dns_domain.id as founddomain_id,
+        dns_domain.name as domainname
+    INTO
+        result
     FROM
-        dns_domain, dns_soa_record
+        dns_aaaa_record
+    LEFT OUTER JOIN
+        dns_domain
+    ON
+        dns_domain.id = dns_aaaa_record.domain_id
     WHERE
-        '.' || searchname LIKE '%.' || dns_domain.name AND
-        dns_domain.id = dns_soa_record.domain_id
-    ORDER BY
-        length(dns_domain.name) DESC
-    LIMIT 1
+        dns_aaaa_record.fqdn = searchname
     ;
+
+    IF FOUND THEN
+        RETURN QUERY
+        SELECT
+            {RR_TYPE_A} as type,
+            true as nxdomain,
+            result.domainname as domainname,
+            result.ttl as ttl,
+            NULL::varchar(255) as nsname,
+            NULL::varchar(255) as rname,
+            NULL::int as serial,
+            NULL::int as refresh,
+            NULL::int as retry,
+            NULL::int as expiry,
+            NULL::int as nxttl,
+            result.ip_address as ip_address,
+            NULL::varchar(255) as cname
+        UNION
+        SELECT
+            {RR_TYPE_NS} as type,
+            true as nxdomain,
+            result.domainname as domainname,
+            dns_ns_record.ttl as ttl,
+            dns_ns_record.name as nsname,
+            NULL::varchar(255) as rname,
+            NULL::int as serial,
+            NULL::int as refresh,
+            NULL::int as retry,
+            NULL::int as expiry,
+            NULL::int as nxttl,
+            NULL::inet as ip_address,
+            NULL::varchar(255) as cname
+        FROM
+            dns_ns_record
+        WHERE
+            result.founddomain_id = dns_ns_record.domain_id
+        ;
+    ELSE
+        RETURN QUERY
+        SELECT
+            {RR_TYPE_SOA} as type,
+        exists(
+            SELECT 1
+            FROM
+                dns_a_record
+            WHERE
+                dns_a_record.fqdn = searchname
+            ) as nxdomain,
+            dns_domain.name as domainname,
+            dns_soa_record.ttl as ttl,
+            dns_soa_record.nameserver as nsname,
+            dns_soa_record.rname as rname,
+            dns_soa_record.serial as serial,
+            dns_soa_record.refresh as refresh,
+            dns_soa_record.retry as retry,
+            dns_soa_record.expiry as expiry,
+            dns_soa_record.nxttl as nxttl,
+            NULL::inet as ip_address,
+            NULL::varchar(255) as cname
+        FROM
+            dns_domain, dns_soa_record
+        WHERE
+            '.' || searchname LIKE '%.' || dns_domain.name AND
+            dns_domain.id = dns_soa_record.domain_id
+        ORDER BY
+            length(dns_domain.name) DESC
+        LIMIT 1
+        ;
+    END IF;
 END IF;
 RETURN ;
 END
 $BODY$
 LANGUAGE plpgsql;
 ;
-
 PREPARE get_aaaa_record(VARCHAR(255)) AS
 SELECT * from get_aaaa_record($1) ;

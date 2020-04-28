@@ -76,7 +76,7 @@ async def db_lookup(db_pool, query):
             await db_pool.release(conn)
             for record in records:
                 results.append(record)
-    print(results)
+#    print(results)
     return results
 
 async def DBConnecter(db_pool_fut, q):

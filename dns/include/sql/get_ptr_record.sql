@@ -23,17 +23,6 @@ DECLARE
 BEGIN
 
 SELECT
-    exists(
-        SELECT 1
-        FROM
-            dns_a_record,
-            dns_aaaa_record,
-            dns_cname_record
-        WHERE
-            dns_a_record.fqdn = searchname OR
-            dns_aaaa_record.fqdn = searchname OR
-            dns_cname_record.fqdn = searchname
-        ) as nxdomain,
     dns_ptr_record.ttl as ttl,
     dns_ptr_record.hostname as hostname ,
     dns_domain.name as domainname,
@@ -51,7 +40,7 @@ IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_PTR} as type,
-        result.nxdomain as nxdomain,
+        true as nxdomain,
         result.domainname as domainname,
         result.ttl as ttl,
         NULL::varchar(255) as nsname,
@@ -62,17 +51,11 @@ IF FOUND THEN
         NULL::int as expiry,
         NULL::int as nxttl,
         result.hostname  as hostname
-    FROM
-        dns_ptr_record,
-        dns_domain
-    WHERE
-        dns_domain.id = result.founddomain_id AND
-        dns_ptr_record.fqdn = searchname
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        result.nxdomain as nxdomain,
-        dns_domain.name as domainname,
+        true as nxdomain,
+        result.domainname as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
@@ -83,11 +66,9 @@ IF FOUND THEN
         NULL::int as nxttl,
         NULL::varchar(255) as hostname
     FROM
-        dns_domain, dns_ptr_record, dns_ns_record
+        dns_ns_record
     WHERE
-        dns_ptr_record.fqdn = searchname AND
-        dns_domain.id = dns_ptr_record.domain_id AND
-        dns_domain.id = dns_ns_record.domain_id
+        result.founddomain_id = dns_ns_record.domain_id
     ;
 ELSE
     RETURN QUERY
