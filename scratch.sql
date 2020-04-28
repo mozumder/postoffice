@@ -4,6 +4,52 @@
 ./manage.py crateview
 ./manage.py createtemplate
 
+
+SELECT exists(
+        SELECT 1
+        FROM
+            dns_cname_record
+        WHERE
+            dns_cname_record.fqdn = 'mail2.mozumder.net'
+        ) as found
+;
+
+
+SELECT
+    dns_cname_record.canonical_name as cname,
+    dns_domain.id as domain_id,
+    dns_domain.name as domainname
+FROM
+    dns_cname_record
+LEFT OUTER JOIN
+    dns_domain
+ON
+    dns_domain.id = dns_cname_record.domain_id
+WHERE
+    dns_cname_record.fqdn = 'mail2.mozumder.net'
+;
+
+    SELECT
+        dns_a_record.fqdn,
+        dns_aaaa_record.fqdn,
+        dns_cname_record.fqdn,
+        dns_cname_record.canonical_name,
+        1 as existing,
+        COALESCE(dns_cname_record.canonical_name, 'mail.mozumder.net') as cname
+    FROM
+        dns_domain,
+        dns_a_record,
+        dns_aaaa_record,
+        dns_cname_record
+    WHERE
+        (dns_domain.id = dns_a_record.domain_id AND
+        dns_a_record.fqdn = 'mail.mozumder.net') OR
+        (dns_domain.id = dns_aaaa_record.domain_id AND
+        dns_aaaa_record.fqdn = 'mail.mozumder.net') OR
+        (dns_domain.id = dns_cname_record.domain_id AND
+        dns_cname_record.fqdn = 'mail.mozumder.net')
+;
+
 SELECT
     *
 FROM
