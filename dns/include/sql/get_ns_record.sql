@@ -70,7 +70,17 @@ ELSE
     RETURN QUERY
     SELECT
         {RR_TYPE_SOA} as type,
-        result.nxdomain as nxdomain,
+        exists(
+            SELECT 1
+            FROM
+                dns_a_record,
+                dns_aaaa_record,
+                dns_cname_record
+            WHERE
+                dns_a_record.fqdn = searchname OR
+                dns_aaaa_record.fqdn = searchname OR
+                dns_cname_record.fqdn = searchname
+            ) as nxdomain,
         dns_domain.name as domainname,
         dns_soa_record.ttl as ttl,
         dns_soa_record.nameserver as nsname,
