@@ -4,8 +4,9 @@ CREATE OR REPLACE FUNCTION get_mx_record(
     )
 RETURNS TABLE (
     type INT,
-    ttl INT,
+    nonexstent BOOLEAN,
     domainname VARCHAR(255),
+    ttl INT,
     nsname VARCHAR(255),
     rname VARCHAR(255),
     serial INT,
@@ -42,8 +43,9 @@ IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_MX} as type,
-        dns_mx_record.ttl as ttl,
+        NULL::bool as nonexistent,
         result.domainname as domainname,
+        dns_mx_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
         NULL::int as serial,
@@ -63,8 +65,9 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        dns_ns_record.ttl as ttl,
+        NULL::bool as nonexistent,
         dns_domain.name as domainname,
+        dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
         NULL::int as serial,
@@ -84,8 +87,9 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_A} as type,
-        dns_a_record.ttl as ttl,
+        NULL::bool as nonexistent,
         dns_mx_record.hostname as domainname,
+        dns_a_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
         NULL::int as serial,

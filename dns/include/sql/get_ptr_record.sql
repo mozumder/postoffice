@@ -4,8 +4,9 @@ CREATE OR REPLACE FUNCTION get_ptr_record(
     )
 RETURNS TABLE (
     type INT,
-    ttl INT,
+    nonexstent BOOLEAN,
     domainname VARCHAR(255),
+    ttl INT,
     nsname VARCHAR(255),
     rname VARCHAR(255),
     serial INT,
@@ -39,8 +40,8 @@ IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_PTR} as type,
-        result.ttl as ttl,
         result.domainname as domainname,
+        result.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
         NULL::int as serial,
@@ -58,8 +59,9 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        dns_ns_record.ttl as ttl,
+        NULL::bool as nonexistent,
         dns_domain.name as domainname,
+        dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
         NULL::int as serial,
@@ -79,8 +81,9 @@ ELSE
     RETURN QUERY
     SELECT
         {RR_TYPE_SOA} as type,
-        dns_soa_record.ttl as ttl,
+        NULL::bool as nonexistent,
         dns_domain.name as domainname,
+        dns_soa_record.ttl as ttl,
         dns_soa_record.nameserver as nsname,
         dns_soa_record.rname as rname,
         dns_soa_record.serial as serial,
