@@ -1,3 +1,9 @@
+./manage.py createmodel -app polls Question question_text:varchar(200) pub_date:datetime
+./manage.py createmodel -app polls Choice question=CharField(max-length=200) pub_date=DateTimeField('date published')
+./manage.py createadmin -app polls -model [
+./manage.py crateview
+./manage.py createtemplate
+
 SELECT
     *
 FROM
