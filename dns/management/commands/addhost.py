@@ -114,7 +114,7 @@ class Command(BaseCommand):
                 print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
 
         if options['mx']:
-            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname= options['host'])
+            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname=fqdn)
             mx_record.host = h
             mx_record.fqdn = domain.name
             mx_record.ttl = options['ttl']

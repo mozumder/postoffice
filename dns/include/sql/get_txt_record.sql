@@ -19,25 +19,14 @@ RETURNS TABLE (
 AS
 $BODY$
 DECLARE
-    result RECORD;
+    domain_check RECORD;
 BEGIN
 
 SELECT
-    exists(
-        SELECT 1
-        FROM
-            dns_a_record,
-            dns_aaaa_record,
-            dns_cname_record
-        WHERE
-            dns_a_record.fqdn = searchname OR
-            dns_aaaa_record.fqdn = searchname OR
-            dns_cname_record.fqdn = searchname
-        ) as nxdomain,
     dns_domain.name as domainname,
     dns_domain.id as founddomain_id
 INTO
-    result
+    domain_check
 FROM
     dns_txt_record,
     dns_domain
@@ -52,8 +41,8 @@ IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_TXT} as type,
-        result.nxdomain as nxdomain,
-        result.domainname as domainname,
+        true as nxdomain,
+        domain_check.domainname as domainname,
         dns_txt_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
@@ -64,16 +53,14 @@ IF FOUND THEN
         NULL::int as nxttl,
         dns_txt_record.value as value
     FROM
-        dns_txt_record,
-        dns_domain
+        dns_txt_record
     WHERE
-        dns_domain.id = result.founddomain_id AND
         dns_txt_record.fqdn = searchname
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        result.nxdomain as nxdomain,
-        dns_domain.name as domainname,
+        true as nxdomain,
+        domain_check.domainname as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
@@ -84,17 +71,25 @@ IF FOUND THEN
         NULL::int as nxttl,
         NULL::varchar(255) as value
     FROM
-        dns_domain, dns_txt_record, dns_ns_record
+        dns_ns_record
     WHERE
-        dns_txt_record.fqdn = searchname AND
-        dns_domain.id = dns_txt_record.domain_id AND
-        dns_domain.id = dns_ns_record.domain_id
+        domain_check.founddomain_id = dns_ns_record.domain_id
     ;
 ELSE
     RETURN QUERY
     SELECT
         {RR_TYPE_SOA} as type,
-        result.nxdomain as nxdomain,
+        exists(
+            SELECT 1
+            FROM
+                dns_a_record,
+                dns_aaaa_record,
+                dns_cname_record
+            WHERE
+                dns_a_record.fqdn = searchname OR
+                dns_aaaa_record.fqdn = searchname OR
+                dns_cname_record.fqdn = searchname
+            ) as nxdomain,
         dns_domain.name as domainname,
         dns_soa_record.ttl as ttl,
         dns_soa_record.nameserver as nsname,
