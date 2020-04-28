@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION get_mx_record(
     )
 RETURNS TABLE (
     type INT,
-    nonexstent BOOLEAN,
+    nxdomain BOOLEAN,
     domainname VARCHAR(255),
     ttl INT,
     nsname VARCHAR(255),
@@ -25,6 +25,17 @@ DECLARE
 BEGIN
 
 SELECT
+    exists(
+        SELECT 1
+        FROM
+            dns_a_record,
+            dns_aaaa_record,
+            dns_cname_record
+        WHERE
+            dns_a_record.fqdn = searchname OR
+            dns_aaaa_record.fqdn = searchname OR
+            dns_cname_record.fqdn = searchname
+        ) as nxdomain,
     dns_domain.name as domainname,
     dns_domain.id as founddomain_id
 INTO
@@ -43,7 +54,7 @@ IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_MX} as type,
-        NULL::bool as nonexistent,
+        result.nxdomain as nxdomain,
         result.domainname as domainname,
         dns_mx_record.ttl as ttl,
         NULL::varchar(255) as nsname,
@@ -65,7 +76,7 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        NULL::bool as nonexistent,
+        result.nxdomain as nxdomain,
         dns_domain.name as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
@@ -87,7 +98,7 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_A} as type,
-        NULL::bool as nonexistent,
+        result.nxdomain as nxdomain,
         dns_mx_record.hostname as domainname,
         dns_a_record.ttl as ttl,
         NULL::varchar(255) as nsname,
@@ -111,8 +122,9 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_AAAA} as type,
-        dns_aaaa_record.ttl as ttl,
+        NULL::bool as nxdomain,
         dns_mx_record.hostname as domainname,
+        dns_aaaa_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
         NULL::int as serial,
@@ -136,8 +148,9 @@ ELSE
     RETURN QUERY
     SELECT
         {RR_TYPE_SOA} as type,
-        dns_soa_record.ttl as ttl,
+        NULL::bool as nxdomain,
         dns_domain.name as domainname,
+        dns_soa_record.ttl as ttl,
         dns_soa_record.nameserver as nsname,
         dns_soa_record.rname as rname,
         dns_soa_record.serial as serial,

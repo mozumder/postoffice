@@ -214,9 +214,10 @@ async def Query(pool, data, addr, transport):
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
-                    if record[0] == query[0]:
+                    if record[1] == True:
                         RCODE_response_code = 0
                     if record[0] == RR_TYPE_A:
+                        print(f'Exists: {record[1]}')
                         RLENGTH = 4
                         RDATA = record[11].packed
                         print(f'  A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
