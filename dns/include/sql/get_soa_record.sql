@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION get_soa_record(
     )
 RETURNS TABLE (
     type INT,
-    nonexstent BOOLEAN,
+    nxdomain BOOLEAN,
     domainname VARCHAR(255),
     ttl INT,
     nsname VARCHAR(255),
@@ -23,6 +23,17 @@ DECLARE
 BEGIN
 
 SELECT
+    exists(
+        SELECT 1
+        FROM
+            dns_a_record,
+            dns_aaaa_record,
+            dns_cname_record
+        WHERE
+            dns_a_record.fqdn = searchname OR
+            dns_aaaa_record.fqdn = searchname OR
+            dns_cname_record.fqdn = searchname
+        ) as nxdomain,
     dns_soa_record.ttl as ttl,
     dns_domain.name as domainname,
     dns_soa_record.nameserver as nsname,
@@ -48,7 +59,7 @@ IF FOUND THEN
     RETURN QUERY
     SELECT
         {RR_TYPE_SOA} as type,
-        NULL::bool as nonexistent,
+        result.nxdomain as nxdomain,
         result.domainname as domainname,
         result.ttl as ttl,
         result.nsname as nsname,
@@ -62,7 +73,7 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_NS} as type,
-        NULL::bool as nonexistent,
+        result.nxdomain as nxdomain,
         dns_domain.name as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
