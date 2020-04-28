@@ -249,7 +249,7 @@ async def Query(pool, data, addr, transport):
                             answers_data.append(response_data)
                     elif record[0] == RR_TYPE_CNAME:
                         name = b''
-                        labels = record[11].split(".")
+                        labels = record[12].split(".")
                         for label in labels:
                             name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
                         name = name + b'\0'

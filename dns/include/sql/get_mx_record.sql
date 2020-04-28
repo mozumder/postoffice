@@ -122,7 +122,7 @@ IF FOUND THEN
     UNION
     SELECT
         {RR_TYPE_AAAA} as type,
-        NULL::bool as nxdomain,
+        result.nxdomain as nxdomain,
         dns_mx_record.hostname as domainname,
         dns_aaaa_record.ttl as ttl,
         NULL::varchar(255) as nsname,
@@ -148,7 +148,17 @@ ELSE
     RETURN QUERY
     SELECT
         {RR_TYPE_SOA} as type,
-        NULL::bool as nxdomain,
+    exists(
+        SELECT 1
+        FROM
+            dns_a_record,
+            dns_aaaa_record,
+            dns_cname_record
+        WHERE
+            dns_a_record.fqdn = searchname OR
+            dns_aaaa_record.fqdn = searchname OR
+            dns_cname_record.fqdn = searchname
+        ) as nxdomain,
         dns_domain.name as domainname,
         dns_soa_record.ttl as ttl,
         dns_soa_record.nameserver as nsname,
