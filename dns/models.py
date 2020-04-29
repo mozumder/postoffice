@@ -800,14 +800,15 @@ class CAA_Record(models.Model):
         _("Type"),
         max_length=1,
         choices=CAA_TYPE_CHOICES)
+    issuer_critical = models.BooleanField(
+        verbose_name=_("Issuer Critical"),
+        default=False)
+    tag = models.CharField(
+        verbose_name=_("Tag"),
+        max_length=16)
     value = models.CharField(
         verbose_name=_("Value"),
-        max_length=1024,
-        null=True, blank=True)
-    issuer_critical = models.CharField(
-        verbose_name=_("Issuer Critical"),
-        max_length=64,
-        null=True, blank=True)
+        max_length=1024)
     ttl = models.IntegerField(
         verbose_name=_("Time-to-Live"),
         default=settings.RECORD_TTL)
