@@ -15,6 +15,7 @@ opt_struct = bitstruct.compile(opt_format)
 label_struct = bitstruct.compile(label_format)
 soa_struct = bitstruct.compile(soa_format)
 mx_struct = bitstruct.compile(mx_format)
+caa_flags_struct = bitstruct.compile(caa_flags_format)
 
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
@@ -204,13 +205,17 @@ async def Query(pool, data, addr, transport):
     if OPCODE_operation == OPCODE_QUERY:
         offset = 12
         questions = []
-        if len(results) > 0:
-            if len(results[0]) > 0:
-                AA_authoritative_answer = True if results[0][0][3] != None else False
+        if results[0] != -1:
+            if len(results) > 0:
+                if len(results[0]) > 0:
+                    AA_authoritative_answer = True if results[0][0][3] != None else False
         RCODE_response_code = 3
         for i in range(len(queries)):
             query = queries[i]
-            if len(results) > 0:
+            print(results)
+            if results[0] == -1:
+                RCODE_response_code = 4
+            elif len(results) > 0:
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
@@ -290,6 +295,13 @@ async def Query(pool, data, addr, transport):
                         RLENGTH = len(string)
                         print(f'  TXT Name={record[11]}')
                         response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + string
+                        answers_data.append(response_data)
+                    elif record[0] == RR_TYPE_CAA:
+                        rdata = caa_flags_struct.pack(record[13])
+                        rdata = rdata + len(record[12]).to_bytes(1, byteorder='big') + bytes(record[12], 'utf-8') + bytes(record[11], 'utf-8')
+                        RLENGTH = len(rdata)
+                        print(f'  CAA Tag={record[12]} Value={record[11]}')
+                        response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + rdata
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_MX:
                         name = b''

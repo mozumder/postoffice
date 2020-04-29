@@ -824,10 +824,10 @@ class CAA_Record(models.Model):
         verbose_name=_("Date Updated"),
         auto_now=True)
     def __str__(self):
-        if self.host:
-            return f'{self.name}.{self.domain.name}'
+        if self.name:
+            return f'{self.name}.{self.domain.name}: {self.tag} {self.value}'
         else:
-            return f'.{self.domain.name}'
+            return f'{self.domain.name}: {self.tag} {self.value}'
     def domain_name(self):
         names = self.name.split(".")[1:]
         tld = names[-1]
