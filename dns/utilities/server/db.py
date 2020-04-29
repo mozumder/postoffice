@@ -14,68 +14,34 @@ logger = logging.getLogger(__name__)
 def protecc_str(name:str):
     return name.replace('"', r'\"').replace("'", r"\'")
 
+query_commands = {
+    RR_TYPE_A:'get_a_record',
+    RR_TYPE_AAAA:'get_aaaa_record',
+    RR_TYPE_CNAME:'get_cname_record',
+    RR_TYPE_MX:'get_mx_record',
+    RR_TYPE_NS:'get_ns_record',
+    RR_TYPE_SOA:'get_soa_record',
+    RR_TYPE_TXT:'get_txt_record',
+    RR_TYPE_SOA:'get_ptr_record',
+    RR_TYPE_CAA:'get_caa_record',
+}
+
 async def db_lookup(db_pool, query):
     # FIXME: Capitalized DNS queries.
     qstring = ".".join(query[3])
     print(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {qstring}')
     results = []
     if query[1] == DNS_CLASS_INTERNET:
-        if query[0] == RR_TYPE_A:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_a_record('{name}')")
+        name = protecc_str(".".join(query[3])).lower()
+        conn = await db_pool.acquire()
+        try:
+            records = await conn.fetch(f"execute {query_commands[query[0]]}('{name}')")
+        except KeyError:
             await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_AAAA:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_aaaa_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_CNAME:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_cname_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_MX:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_mx_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_NS:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_ns_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_SOA:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_soa_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_TXT:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_txt_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
-        elif query[0] == RR_TYPE_PTR:
-            name = protecc_str(".".join(query[3])).lower()
-            conn = await db_pool.acquire()
-            records = await conn.fetch(f"execute get_ptr_record('{name}')")
-            await db_pool.release(conn)
-            for record in records:
-                results.append(record)
+            return -1
+        await db_pool.release(conn)
+        for record in records:
+            results.append(record)
 #    print(results)
     return results
 
