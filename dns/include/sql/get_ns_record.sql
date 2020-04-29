@@ -36,6 +36,7 @@ LIMIT 1
 ;
 
 IF FOUND THEN RETURN QUERY
+-- MX and NS records must never point to CNAME
     SELECT
         {RR_TYPE_NS} as type,
         exists(
@@ -49,7 +50,7 @@ IF FOUND THEN RETURN QUERY
                 dns_aaaa_record.fqdn = searchname OR
                 dns_cname_record.fqdn = searchname
             ) as nxdomain,
-        dns_domain.name as domainname,
+        result.domainname as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
@@ -59,9 +60,8 @@ IF FOUND THEN RETURN QUERY
         NULL::int as expiry,
         NULL::int as nxttl
     FROM
-        dns_domain, dns_ns_record
+        dns_ns_record
     WHERE
-        result.found_domain_id = dns_domain.id AND
         result.found_domain_id = dns_ns_record.domain_id
     ;
 ELSE

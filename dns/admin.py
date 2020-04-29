@@ -384,7 +384,7 @@ class CAA_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'name', 'type', 'value', 'issuer_critical', 'ttl', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'name', 'type', 'issuer_critical', 'tag', 'value', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
@@ -393,8 +393,9 @@ class CAA_RecordAdmin(admin.ModelAdmin):
             ('name'),
             ('fqdn'),
             ('type'),
-            ('value'),
             ('issuer_critical'),
+            ('tag'),
+            ('value'),
             ('ttl'),
             ('serial'),
             ('source'),
