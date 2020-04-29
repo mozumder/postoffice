@@ -14,7 +14,9 @@ RETURNS TABLE (
     retry INT,
     expiry INT,
     nxttl INT,
-    out_value VARCHAR(65535)
+    out_value VARCHAR(65535),
+    out_tag VARCHAR(16),
+    issuer_critical BOOLEAN
 )
 AS
 $BODY$
@@ -51,7 +53,9 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        dns_caa_record.value as value
+        dns_caa_record.value as out_value,
+        dns_caa_record.tag as out_tag,
+        dns_caa_record.issuer_critical as issuer_critical
     FROM
         dns_caa_record
     WHERE
@@ -69,7 +73,9 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        NULL::varchar(255) as value
+        NULL::varchar(65535) as value,
+        NULL::varchar(255) as tag,
+        NULL::boolean as issuer_critical
     FROM
         dns_ns_record
     WHERE
@@ -99,7 +105,9 @@ ELSE
         dns_soa_record.retry as retry,
         dns_soa_record.expiry as expiry,
         dns_soa_record.nxttl as nxttl,
-        NULL::varchar(255) as value
+        NULL::varchar(65535) as value,
+        NULL::varchar(255) as tag,
+        NULL::boolean as issuer_critical
     FROM
         dns_domain, dns_soa_record
     WHERE
