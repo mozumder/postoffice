@@ -48,9 +48,12 @@
 ./manage.py addtxtrecord -n _dmarc mozumder.net 'v=DMARC1; p=reject; sp=reject; rua=mailto:dmarcrua@mozumder.net!10m; ruf=mailto:dmarcruf@mozumder.net!10m; rf=afrf; pct=100; ri=86400'
 ./manage.py addcaarecord mozumder.net issue letsencrypt.org
 ./manage.py addcaarecord mozumder.net iodef mailto:info@mozumder.net
+./manage.py addsrvrecord -pri 0 -w 1 mozumder.net _imaps _tcp 993 mail.mozumder.net
+./manage.py addsrvrecord -pri 0 -w 1 mozumder.net _imap _tcp 143 mail.mozumder.net
 
 ./manage.py createdomain --email dns@dnsmadeeasy.com futureclaw.com  108.51.234.125 ns0.dnsmadeeasy.com ns1.dnsmadeeasy.com ns2.dnsmadeeasy.com ns3.dnsmadeeasy.com ns4.dnsmadeeasy.com
 ./manage.py addhost -dyn futureclaw.com 108.51.234.125 www
 ./manage.py addmailexchange futureclaw.com mail.mozumder.net
 
 ./manage.py createzone --email info@mozumder.net 10.IN-ADDR.ARPA ns.mozumder.net
+

@@ -1,5 +1,5 @@
 """
-Create redirect from one hose name to another. This adds a CNAME record.
+Add text string information to a host or domaim. This creates a TXT Record.
 """
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
@@ -7,7 +7,7 @@ from django.conf import settings
 from dns.models import Host, Domain, TXT_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
-    help = ("Create redirect from one hose name to another. This is an alias name for a host, and creates a CNAME record")
+    help = ("Add text string information to a host or domaim. This creates a TXT Record for the domain.")
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,28 +15,28 @@ class Command(BaseCommand):
             action='store',
             default=settings.RECORD_TTL,
             type=int,
-            help="Time-to-live of added A Name record",
+            help="Time-to-live of added record",
             )
         parser.add_argument(
             '-n','--name',
             nargs='?',
             action='store',
             default=None,
-            help="Name for record. This is similar to a host name and is optional for the domain.",
+            help="Optional name for record. This is queried as if it was a host name.",
             )
         parser.add_argument(
             'domain',
             nargs='?',
             action='store',
             default=None,
-            help="Domain name that record is applied",
+            help="Domain name this record appears under",
             )
         parser.add_argument(
             'value',
             nargs='?',
             action='store',
             default=None,
-            help="String for the value of the TXT record",
+            help="Text string to store",
             )
 
     def handle(self, *args, **options):

@@ -707,7 +707,7 @@ class SRV_Record(models.Model):
         max_length=64,
         null=True, blank=True)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     priority = models.IntegerField(
@@ -716,8 +716,8 @@ class SRV_Record(models.Model):
         verbose_name=_("Weight"))
     port = models.IntegerField(
         verbose_name=_("Port"))
-    host_name = models.CharField(
-        verbose_name=_("Name"),
+    target = models.CharField(
+        verbose_name=_("Target"),
         max_length=64,
         null=True, blank=True)
     host = models.ForeignKey(
@@ -740,7 +740,7 @@ class SRV_Record(models.Model):
         verbose_name=_("Date Updated"),
         auto_now=True)
     def __str__(self):
-        return f'{self.name}: {self.value}'
+        return f'{self.name}: {self.target}'
     def domain_name(self):
         names = self.name.split(".")[1:]
         tld = names[-1]
