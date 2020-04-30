@@ -1,6 +1,6 @@
 DROP FUNCTION IF EXISTS get_ns_record(character varying(255));
 CREATE OR REPLACE FUNCTION get_ns_record(
-    searchname varchar(255)
+    search varchar(255)
     )
 RETURNS TABLE (
     type INT,
@@ -29,7 +29,7 @@ INTO
 FROM
     dns_domain
 WHERE
-    searchname = dns_domain.name
+    search = dns_domain.name
 ORDER BY
     length(dns_domain.name) DESC
 LIMIT 1
@@ -46,9 +46,9 @@ IF FOUND THEN RETURN QUERY
                 dns_aaaa_record,
                 dns_cname_record
             WHERE
-                dns_a_record.fqdn = searchname OR
-                dns_aaaa_record.fqdn = searchname OR
-                dns_cname_record.fqdn = searchname
+                dns_a_record.searchname = search OR
+                dns_aaaa_record.searchname = search OR
+                dns_cname_record.searchname = search
             ) as nxdomain,
         result.domainname as domainname,
         dns_ns_record.ttl as ttl,
@@ -75,9 +75,9 @@ ELSE
                 dns_aaaa_record,
                 dns_cname_record
             WHERE
-                dns_a_record.fqdn = searchname OR
-                dns_aaaa_record.fqdn = searchname OR
-                dns_cname_record.fqdn = searchname
+                dns_a_record.searchname = search OR
+                dns_aaaa_record.searchname = search OR
+                dns_cname_record.searchname = search
             ) as nxdomain,
         dns_domain.name as domainname,
         dns_soa_record.ttl as ttl,
@@ -91,7 +91,7 @@ ELSE
     FROM
         dns_domain, dns_soa_record
     WHERE
-        '.' || searchname LIKE '%.' || dns_domain.name AND
+        '.' || search LIKE '%.' || dns_domain.name AND
         dns_domain.id = dns_soa_record.domain_id
     ORDER BY
         length(dns_domain.name) DESC

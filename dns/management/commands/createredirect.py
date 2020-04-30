@@ -49,7 +49,7 @@ class Command(BaseCommand):
         if options['alias'] == None:
             raise CommandError("Need an Alias Name.")
             
-        fqdn = options['alias'] + "." + domainname
+        searchname = options['alias'] + "." + domainname
 
         try:
             domain = Domain.objects.get(name=options['domain'])
@@ -61,7 +61,7 @@ class Command(BaseCommand):
         h = Host.objects.filter(domain=domain,name=options['host'])
         if h:
             cname_record.host = h[0]
-        cname_record.fqdn = fqdn
+        cname_record.searchname = searchname
         cname_record.ttl = options['ttl']
         cname_record.source = SOURCE_SCRIPT
         cname_record.save()

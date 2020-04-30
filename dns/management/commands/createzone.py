@@ -119,7 +119,7 @@ class Command(BaseCommand):
         for ns in options['name_server']:
             ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,name=ns)
             ns_record.ttl = options['ttl']
-            ns_record.fqdn = domainname
+            ns_record.searchname = domainname
             ns_record.source = SOURCE_SCRIPT
             ns_record.save()
             if ns_created:
