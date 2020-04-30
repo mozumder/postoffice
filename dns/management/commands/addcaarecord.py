@@ -65,9 +65,9 @@ class Command(BaseCommand):
             raise CommandError("Need a value to store.")
 
         if options['name'] != None:
-            fqdn = options['name'] + "." + domainname
+            searchname = options['name'] + "." + domainname
         else:
-            fqdn = domainname
+            searchname = domainname
 
         try:
             domain = Domain.objects.get(name=options['domain'])
@@ -75,7 +75,7 @@ class Command(BaseCommand):
             raise CommandError('Domain not found. Exiting')
 
         caa_record = CAA_Record.objects.create(domain=domain, value=options['value'])
-        caa_record.fqdn = fqdn
+        caa_record.searchname = searchname
         caa_record.name = options['name']
         caa_record.ttl = options['ttl']
         caa_record.tag = options['tag'].lower()

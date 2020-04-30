@@ -56,7 +56,7 @@ class Command(BaseCommand):
         h = Host.objects.filter(domain=domain,name=options['host'])
         if h:
             cname_record.host = h[0]
-        mx_record.fqdn = domain.name
+        mx_record.searchname = domain.name
         mx_record.ttl = options['ttl']
         mx_record.priority = options['priority']
         mx_record.source = SOURCE_SCRIPT

@@ -212,7 +212,6 @@ async def Query(pool, data, addr, transport):
         RCODE_response_code = 3
         for i in range(len(queries)):
             query = queries[i]
-            print(results)
             if results[0] == -1:
                 RCODE_response_code = 4
             elif len(results) > 0:

@@ -75,7 +75,7 @@ class Command(BaseCommand):
         if options['host'] == None:
             print("Using blank host name.")
             
-        fqdn = options['host'] + "." + domainname
+        searchname = options['host'] + "." + domainname
 
         try:
             domain = Domain.objects.get(name=options['domain'])
@@ -91,7 +91,7 @@ class Command(BaseCommand):
 
         a_record, a_created = A_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ip_address'])
         a_record.host = h
-        a_record.fqdn = fqdn
+        a_record.searchname = searchname
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
         a_record.source = SOURCE_SCRIPT
@@ -104,7 +104,7 @@ class Command(BaseCommand):
         if options['ipv6']:
             aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ipv6'])
             aaaa_record.host = h
-            aaaa_record.fqdn = fqdn
+            aaaa_record.searchname = searchname
             aaaa_record.ttl = options['ttl']
             aaaa_record.source = SOURCE_SCRIPT
             aaaa_record.save()
@@ -114,9 +114,9 @@ class Command(BaseCommand):
                 print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
 
         if options['mx']:
-            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname=fqdn)
+            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname=searchname)
             mx_record.host = h
-            mx_record.fqdn = domain.name
+            mx_record.searchname = domain.name
             mx_record.ttl = options['ttl']
             mx_record.source = SOURCE_SCRIPT
             mx_record.save()

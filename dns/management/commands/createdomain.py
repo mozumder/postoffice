@@ -121,7 +121,7 @@ class Command(BaseCommand):
 
         a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None, ip_address=options['ip_address'])
         a_record.host = None
-        a_record.fqdn = domainname
+        a_record.searchname = domainname
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
         a_record.source = SOURCE_SCRIPT
@@ -152,7 +152,7 @@ class Command(BaseCommand):
         for ns in options['name_server']:
             ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,name=ns)
             ns_record.ttl = options['ttl']
-            ns_record.fqdn = domainname
+            ns_record.searchname = domainname
             ns_record.source = SOURCE_SCRIPT
             ns_record.save()
             if ns_created:
@@ -164,7 +164,7 @@ class Command(BaseCommand):
         if options['ipv6']:
             aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=d, name=None, ip_address = options['ipv6'])
             aaaa_record.host = h
-            aaaa_record.fqdn = domainname
+            aaaa_record.searchname = domainname
             aaaa_record.ttl = options['ttl']
             aaaa_record.source = SOURCE_SCRIPT
             aaaa_record.save()

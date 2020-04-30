@@ -1,6 +1,6 @@
 DROP FUNCTION IF EXISTS get_soa_record(character varying);
 CREATE OR REPLACE FUNCTION get_soa_record(
-    searchname varchar(255)
+    search varchar(255)
     )
 RETURNS TABLE (
     type INT,
@@ -29,9 +29,9 @@ SELECT
             dns_aaaa_record,
             dns_cname_record
         WHERE
-            dns_a_record.fqdn = searchname OR
-            dns_aaaa_record.fqdn = searchname OR
-            dns_cname_record.fqdn = searchname
+            dns_a_record.searchname = search OR
+            dns_aaaa_record.searchname = search OR
+            dns_cname_record.searchname = search
         ) as nxdomain,
     dns_soa_record.ttl as ttl,
     dns_domain.name as domainname,
@@ -47,7 +47,7 @@ INTO
 FROM
     dns_domain, dns_soa_record
 WHERE
-    '.' || searchname LIKE '%.' || dns_domain.name AND
+    '.' || search LIKE '%.' || dns_domain.name AND
     dns_domain.id = dns_soa_record.domain_id
 ORDER BY
     length(dns_domain.name) DESC

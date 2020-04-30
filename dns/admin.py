@@ -105,7 +105,7 @@ class A_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('ip_address'),
             ('dynamic_ip'),
             ('roundrobin'),
@@ -142,7 +142,7 @@ class AAAA_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('ip_address'),
             ('host'),
             ('ttl'),
@@ -177,7 +177,7 @@ class CNAME_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('canonical_name'),
             ('host'),
             ('ttl'),
@@ -212,7 +212,7 @@ class MX_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('hostname'),
             ('host'),
             ('preference'),
@@ -248,7 +248,7 @@ class TXT_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('value'),
             ('ttl'),
             ('serial'),
@@ -282,7 +282,7 @@ class PTR_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('hostname'),
             ('host'),
             ('ttl'),
@@ -317,7 +317,7 @@ class NS_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('delegate'),
             ('delegate_host'),
             ('ttl'),
@@ -352,7 +352,7 @@ class SRV_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('priority'),
             ('weight'),
             ('port'),
@@ -391,7 +391,7 @@ class CAA_RecordAdmin(admin.ModelAdmin):
         (None, {'fields': [
             ('domain'),
             ('name'),
-            ('fqdn'),
+            ('searchname'),
             ('type'),
             ('issuer_critical'),
             ('tag'),
