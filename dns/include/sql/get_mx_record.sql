@@ -87,7 +87,7 @@ IF FOUND THEN
     SELECT
         {RR_TYPE_A} as type,
         true as nxdomain,
-        mx_check.domainname as domainname,
+        mx_check.hostname as hostname,
         dns_a_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,
@@ -107,7 +107,7 @@ IF FOUND THEN
     SELECT
         {RR_TYPE_AAAA} as type,
         true as nxdomain,
-        mx_check.domainname as domainname,
+        mx_check.hostname as hostname,
         dns_aaaa_record.ttl as ttl,
         NULL::varchar(255) as nsname,
         NULL::varchar(255) as rname,

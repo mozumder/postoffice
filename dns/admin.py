@@ -345,7 +345,7 @@ class SRV_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'name', 'priority', 'weight', 'port', 'host_name', 'ttl', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'name', 'priority', 'weight', 'port', 'target', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
@@ -356,7 +356,7 @@ class SRV_RecordAdmin(admin.ModelAdmin):
             ('priority'),
             ('weight'),
             ('port'),
-            ('host_name'),
+            ('target'),
             ('host'),
             ('ttl'),
             ('serial'),
