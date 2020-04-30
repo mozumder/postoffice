@@ -48,9 +48,9 @@ class Command(BaseCommand):
             raise CommandError("Need a value to store.")
         
         if options['name'] != None:
-            fqdn = options['name'] + "." + domainname
+            searchname = options['name'] + "." + domainname
         else:
-            fqdn = domainname
+            searchname = domainname
 
         try:
             domain = Domain.objects.get(name=options['domain'])
@@ -58,7 +58,7 @@ class Command(BaseCommand):
             raise CommandError('Domain not found. Exiting')
 
         txt_record = TXT_Record.objects.create(domain=domain, value=options['value'])
-        txt_record.fqdn = fqdn
+        txt_record.searchname = searchname
         txt_record.name = options['name']
         txt_record.ttl = options['ttl']
         txt_record.source = SOURCE_SCRIPT

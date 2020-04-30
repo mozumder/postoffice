@@ -1,6 +1,6 @@
 DROP FUNCTION IF EXISTS get_aaaa_record(character varying);
 CREATE OR REPLACE FUNCTION get_aaaa_record(
-    searchname varchar(255)
+    search varchar(255)
     )
 RETURNS TABLE (
     type INT,
@@ -38,7 +38,7 @@ LEFT OUTER JOIN
 ON
     dns_domain.id = dns_cname_record.domain_id
 WHERE
-    dns_cname_record.fqdn = searchname
+    dns_cname_record.searchname = search
 ;
 
 IF FOUND THEN
@@ -60,7 +60,7 @@ IF FOUND THEN
     FROM
         dns_aaaa_record
     WHERE
-        dns_aaaa_record.fqdn = cname_check.cname
+        dns_aaaa_record.searchname = cname_check.cname
     UNION
     SELECT
         {RR_TYPE_CNAME} as type,
@@ -112,7 +112,7 @@ ELSE
     ON
         dns_domain.id = dns_aaaa_record.domain_id
     WHERE
-        dns_aaaa_record.fqdn = searchname
+        dns_aaaa_record.searchname = search
     ;
 
     IF FOUND THEN
@@ -160,7 +160,7 @@ ELSE
             FROM
                 dns_a_record
             WHERE
-                dns_a_record.fqdn = searchname
+                dns_a_record.searchname = search
             ) as nxdomain,
             dns_domain.name as domainname,
             dns_soa_record.ttl as ttl,
@@ -176,7 +176,7 @@ ELSE
         FROM
             dns_domain, dns_soa_record
         WHERE
-            '.' || searchname LIKE '%.' || dns_domain.name AND
+            '.' || search LIKE '%.' || dns_domain.name AND
             dns_domain.id = dns_soa_record.domain_id
         ORDER BY
             length(dns_domain.name) DESC

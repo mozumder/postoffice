@@ -49,7 +49,7 @@ class Command(BaseCommand):
         if options['name'] == None:
             raise CommandError("Need a Name.")
         
-        fqdn = options['name'] + "." + zone
+        searchname = options['name'] + "." + zone
 
         hostname = options['host'].split(".")[0]
         hostdomainname = ".".join(options['host'].split(".")[1:])
@@ -62,11 +62,11 @@ class Command(BaseCommand):
         except:
             raise CommandError("Zone not found.")
 
-        ptr_record, ptr_created = PTR_Record.objects.get_or_create(domain=zone, hostname=options['host'], name = fqdn)
+        ptr_record, ptr_created = PTR_Record.objects.get_or_create(domain=zone, hostname=options['host'], name = searchname)
         h = Host.objects.filter(domain=host_domain, name=hostname)
         if h:
             ptr_record.host = h[0]
-        ptr_record.fqdn = fqdn
+        ptr_record.searchname = searchname
         ptr_record.ttl = options['ttl']
         ptr_record.source = SOURCE_SCRIPT
         ptr_record.save()

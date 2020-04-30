@@ -255,7 +255,7 @@ class A_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -323,7 +323,7 @@ class AAAA_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -384,7 +384,7 @@ class CNAME_Record(models.Model):
     name = models.CharField(
         verbose_name=_("Alias Name"),
         max_length=64)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -450,7 +450,7 @@ class MX_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -523,7 +523,7 @@ class TXT_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -575,7 +575,7 @@ class PTR_Record(models.Model):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -640,7 +640,7 @@ class NS_Record(models.Model):
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -706,7 +706,7 @@ class SRV_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
@@ -788,7 +788,7 @@ class CAA_Record(models.Model):
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
-    fqdn = models.CharField(
+    searchname = models.CharField(
         verbose_name=_("Fully Qualified Domain Name"),
         max_length=255,
         null=True, blank=True)
