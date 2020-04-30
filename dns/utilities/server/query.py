@@ -16,6 +16,7 @@ label_struct = bitstruct.compile(label_format)
 soa_struct = bitstruct.compile(soa_format)
 mx_struct = bitstruct.compile(mx_format)
 caa_flags_struct = bitstruct.compile(caa_flags_format)
+srv_struct = bitstruct.compile(srv_format)
 
 async def Query(pool, data, addr, transport):
 #        message = data.decode()
@@ -224,7 +225,7 @@ async def Query(pool, data, addr, transport):
                         RLENGTH = 4
                         RDATA = record[12].packed
                         print(f'  A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
-                        if query[0] == RR_TYPE_MX:
+                        if query[0] == RR_TYPE_MX or query[0] == RR_TYPE_SRV:
                             name = b''
                             labels = record[2].split(".")
                             for label in labels:
@@ -247,7 +248,7 @@ async def Query(pool, data, addr, transport):
                         RLENGTH = 16
                         RDATA = record[12].packed
                         print(f'  AAAA IP_Address={record[12]}')
-                        if query[0] == RR_TYPE_MX:
+                        if query[0] == RR_TYPE_MX or query[0] == RR_TYPE_SRV:
                             name = b''
                             labels = record[2].split(".")
                             for label in labels:
@@ -294,6 +295,16 @@ async def Query(pool, data, addr, transport):
                         RLENGTH = len(string)
                         print(f'  TXT Name={record[11]}')
                         response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + string
+                        answers_data.append(response_data)
+                    elif record[0] == RR_TYPE_SRV:
+                        string = b''
+                        labels = record[11].split(".")
+                        for label in labels:
+                            string = string + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                        string = string + b'\0'
+                        RLENGTH = len(string) + 6
+                        print(f'  SRV Name={record[11]}')
+                        response_data = answer_label + srv_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH, record[13], record[14], record[15]) + string
                         answers_data.append(response_data)
                     elif record[0] == RR_TYPE_CAA:
                         rdata = caa_flags_struct.pack(record[13])
