@@ -29,11 +29,10 @@ query_commands = {
 
 async def db_lookup(db_pool, query):
     # FIXME: Capitalized DNS queries.
-    qstring = ".".join(query[3])
-    print(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {qstring}')
+    name = protecc_str(".".join(query[3])).lower()
+    print(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {name}')
     results = []
     if query[1] == DNS_CLASS_INTERNET:
-        name = protecc_str(".".join(query[3])).lower()
         conn = await db_pool.acquire()
         try:
             records = await conn.fetch(f"execute {query_commands[query[0]]}('{name}')")
