@@ -18,7 +18,7 @@ mx_struct = bitstruct.compile(mx_format)
 caa_flags_struct = bitstruct.compile(caa_flags_format)
 srv_struct = bitstruct.compile(srv_format)
 
-async def Query(pool, data, addr, transport):
+async def Query(pool, data):
 #        message = data.decode()
 
     # MARK: Header
@@ -65,72 +65,77 @@ async def Query(pool, data, addr, transport):
     authorities = []
     additionals = []
     options = []
-    for c in range(QDCOUNT_questions_count):
-#        print(f'QUESTION NAME: Starting byte {offset+1}')
-        question_label_list = []
-        namestart = offset
-        while data[offset] != 0:
-            if data[offset] & 192 == 0:
-                question_label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                offset = offset + data[offset] + 1
-#        print(f'{question_label_list=}')
-        names[namestart] = question_label_list
-        offset = offset + 1
-#        print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
-        qtype, qclass = question_struct.unpack(data[offset:offset+4])
-        queries.append((qtype, qclass, data[namestart:offset], question_label_list))
-        offset = offset + 4
-    for c in range(ANCOUNT_answers_count):
-#        print(f'ANSWER NAME: Starting byte {offset+1}')
-        answer_label_list = []
-        namestart = offset
-        while data[offset] != 0 or data[offset]:
-            if data[offset] & 192 == 0:
-                label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                offset = offset + data[offset] + 1
-        if data[offset] & 192 == 192:
-            answer_label_list = names[data[offset] & 63]
-        if answer_label_list:
-            names[namestart] = answer_label_list
-        offset = offset + 1
-#        print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
-        atype, aclass, attl, alength = answer_struct.unpack(data[offset:offset+10])
-        answers.append((answer_label_list, atype, aclass, attl, alength, data[offset+10:offset+10+alength]))
-        offset = offset + 10 + alength
-    for c in range(NSCOUNT_authoritative_answers_count):
-#        print(f'AUTHORITY NAME: Starting byte {offset+1}')
-        authority_label_list = []
-        namestart = offset
-        while data[offset] != 0:
-            if data[offset] & 192 == 0:
-                label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                offset = offset + data[offset] + 1
-        if data[offset] & 192 == 192:
-            authority_label_list = names[data[offset] & 63]
-        if authority_label_list:
-            names[namestart] = authority_label_list
-        offset = offset + 1
-#        print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
-        ntype, nclass, nttl, nlength = answer_struct.unpack(data[offset:offset+10])
-        authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
-        offset = offset + 10 + nlength
-    for c in range(ARCOUNT_additional_records_count):
-#        print(f'ADDITIONAL NAME: Starting byte {offset+1}')
-        additional_label_list = []
-        namestart = offset
-        while data[offset] != 0:
-            if data[offset] & 192 == 0:
-                label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                offset = offset + data[offset] + 1
-        if data[offset] & 192 == 192:
-            additional_label_list = names[data[offset] & 63]
-        if additional_label_list:
-            names[namestart] = additional_label_list
-        offset = offset + 1
-#        print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
-        xtype, xclass, xttl, xlength = answer_struct.unpack(data[offset:offset+10])
-        additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
-        offset = offset + 10 + xlength
+    dictionary = {}
+    if QR_response == False:
+        for c in range(QDCOUNT_questions_count):
+    #        print(f'QUESTION NAME: Starting byte {offset+1}')
+            question_label_list = []
+            namestart = offset
+            while data[offset] != 0:
+                if data[offset] & 192 == 0:
+                    question_label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                    offset = offset + data[offset] + 1
+    #        print(f'{question_label_list=}')
+            for label in range(len(question_label_list)):
+            
+            names[namestart] = question_label_list
+            offset = offset + 1
+    #        print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
+            qtype, qclass = question_struct.unpack(data[offset:offset+4])
+            queries.append((qtype, qclass, data[namestart:offset], question_label_list))
+            offset = offset + 4
+    else:
+        for c in range(ANCOUNT_answers_count):
+    #        print(f'ANSWER NAME: Starting byte {offset+1}')
+            answer_label_list = []
+            namestart = offset
+            while data[offset] != 0 or data[offset]:
+                if data[offset] & 192 == 0:
+                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                    offset = offset + data[offset] + 1
+            if data[offset] & 192 == 192:
+                answer_label_list = names[data[offset] & 63]
+            if answer_label_list:
+                names[namestart] = answer_label_list
+            offset = offset + 1
+    #        print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
+            atype, aclass, attl, alength = answer_struct.unpack(data[offset:offset+10])
+            answers.append((answer_label_list, atype, aclass, attl, alength, data[offset+10:offset+10+alength]))
+            offset = offset + 10 + alength
+        for c in range(NSCOUNT_authoritative_answers_count):
+    #        print(f'AUTHORITY NAME: Starting byte {offset+1}')
+            authority_label_list = []
+            namestart = offset
+            while data[offset] != 0:
+                if data[offset] & 192 == 0:
+                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                    offset = offset + data[offset] + 1
+            if data[offset] & 192 == 192:
+                authority_label_list = names[data[offset] & 63]
+            if authority_label_list:
+                names[namestart] = authority_label_list
+            offset = offset + 1
+    #        print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
+            ntype, nclass, nttl, nlength = answer_struct.unpack(data[offset:offset+10])
+            authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
+            offset = offset + 10 + nlength
+        for c in range(ARCOUNT_additional_records_count):
+    #        print(f'ADDITIONAL NAME: Starting byte {offset+1}')
+            additional_label_list = []
+            namestart = offset
+            while data[offset] != 0:
+                if data[offset] & 192 == 0:
+                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                    offset = offset + data[offset] + 1
+            if data[offset] & 192 == 192:
+                additional_label_list = names[data[offset] & 63]
+            if additional_label_list:
+                names[namestart] = additional_label_list
+            offset = offset + 1
+    #        print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
+            xtype, xclass, xttl, xlength = answer_struct.unpack(data[offset:offset+10])
+            additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
+            offset = offset + 10 + xlength
 
     for record in additionals:
         if record[1] == 41:
@@ -191,6 +196,8 @@ async def Query(pool, data, addr, transport):
     # TODO: Generate IXFR Resource Transfer
     # TODO: Generate TXFR Resource Transfer
 
+    print(names)
+    
     questions_data = []
     answers_data = []
     authority_data = []
@@ -386,7 +393,7 @@ async def Query(pool, data, addr, transport):
         data = data + authority
     for additional in additional_data:
         data = data + additional
-    transport.sendto(data, addr)
+    return data
 
 
 async def respond(self, query):
