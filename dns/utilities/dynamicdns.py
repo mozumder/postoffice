@@ -1,6 +1,7 @@
 import requests
 import logging
-
+import django
+django.setup()
 from dns.models import A_Record, DynamicDNS, DynamicDNSAccount, IPLog
 
 logger = logging.getLogger("dns")

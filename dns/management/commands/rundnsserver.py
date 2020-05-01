@@ -24,6 +24,11 @@ class Command(BaseCommand):
             action='store',
             default=53,
             help="Port number to run DNS server protocol")
+        parser.add_argument(
+            '-proc', '--processes',
+            action='store',
+            default=1,
+            help="Number of concurrent processes to run")
 
     def handle(self, *args, **options):
         if options['ip_address'] == None:
@@ -31,4 +36,4 @@ class Command(BaseCommand):
         if options['port'] == None:
             raise CommandError("Need a port.")
 
-        LaunchDNSServer(options['ip_address'], options['port'])
+        LaunchDNSServer(options['ip_address'], options['port'], options['processes'])
