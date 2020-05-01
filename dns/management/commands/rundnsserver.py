@@ -27,6 +27,7 @@ class Command(BaseCommand):
         parser.add_argument(
             '-proc', '--processes',
             action='store',
+            type=int,
             default=1,
             help="Number of concurrent processes to run")
 

@@ -6,7 +6,7 @@ from .protocol import DNSServerProtocol
 
 def LaunchDNSServer(ip_address='127.0.0.1', port=53, processes=1):
     while True:
-        asyncio.run(UDPListener(ip_address, port, processes=1),)
+        asyncio.run(UDPListener(ip_address, port, processes),)
 
 async def UDPListener(ip_address='127.0.0.1', port=53, processes=1):
     db_name = settings.DATABASES['default']['NAME']
