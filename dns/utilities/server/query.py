@@ -68,21 +68,23 @@ async def Query(pool, data):
     dictionary = {}
     if QR_response == False:
         for c in range(QDCOUNT_questions_count):
-    #        print(f'QUESTION NAME: Starting byte {offset+1}')
-            question_label_list = []
+            print(f'QUESTION NAME: Starting byte {offset+1}')
+            labels = []
             namestart = offset
+            labeloffset = offset
             while data[offset] != 0:
                 if data[offset] & 192 == 0:
-                    question_label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                    labels.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
                     offset = offset + data[offset] + 1
-    #        print(f'{question_label_list=}')
-            for label in range(len(question_label_list)):
-            
-            names[namestart] = question_label_list
+            print(f'{labels=}')
+            names[namestart] = labels
+            for i in range(len(labels)):
+                dictionary[".".join(labels[i:len(labels)])] = labeloffset
+                labeloffset = labeloffset + len(labels[i])
             offset = offset + 1
-    #        print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
+            print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
             qtype, qclass = question_struct.unpack(data[offset:offset+4])
-            queries.append((qtype, qclass, data[namestart:offset], question_label_list))
+            queries.append((qtype, qclass, data[namestart:offset], labels))
             offset = offset + 4
     else:
         for c in range(ANCOUNT_answers_count):
@@ -196,7 +198,7 @@ async def Query(pool, data):
     # TODO: Generate IXFR Resource Transfer
     # TODO: Generate TXFR Resource Transfer
 
-    print(names)
+    print(dictionary)
     
     questions_data = []
     answers_data = []
@@ -235,8 +237,15 @@ async def Query(pool, data):
                         if query[0] == RR_TYPE_MX or query[0] == RR_TYPE_SRV:
                             name = b''
                             labels = record[2].split(".")
-                            for label in labels:
-                                name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+                            for i in range(len(labels)):
+                                check = ".".join(labels[i:len(labels)])
+                                if check in dictionary:
+                                    name = name + label_struct.pack(check)
+                                    break
+                                else:
+                                    name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
+    #                            for label in labels:
+#                                name = name + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
                             name = name + b'\0'
                             response_data = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             additional_data.append(response_data)
