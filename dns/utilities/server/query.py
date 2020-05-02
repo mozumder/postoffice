@@ -84,7 +84,7 @@ async def Query(pool, data):
             offset = offset + 1
             print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
             qtype, qclass = question_struct.unpack(data[offset:offset+4])
-            queries.append((qtype, qclass, data[namestart:offset], labels))
+            queries.append((qtype, qclass, data[namestart:offset], ".".join(labels)))
             offset = offset + 4
     else:
         for c in range(ANCOUNT_answers_count):
@@ -257,6 +257,7 @@ async def Query(pool, data):
                             additional_data.append(response_data)
                         else:
                             if record[11] != None:
+                                answers_result.append((record[0], record[3], record[11]))
                                 cname_label = b''
                                 labels = record[11].split(".")
                                 for label in labels:
@@ -264,6 +265,7 @@ async def Query(pool, data):
                                 cname_label = cname_label + b'\0'
                                 response_data = cname_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             else:
+                                answers_result.append((record[0], record[3], query[3]))
                                 response_data = answer_label + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[3], RLENGTH) + RDATA
                             answers_data.append(response_data)
                     elif record[0] == RR_TYPE_AAAA:
@@ -402,6 +404,8 @@ async def Query(pool, data):
     data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
     for question in questions_data:
         data = data + question
+    for answer in answers_result:
+        print(answer)
     for answer in answers_data:
         data = data + answer
     for authority in authority_data:
