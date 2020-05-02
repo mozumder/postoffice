@@ -332,7 +332,7 @@ async def Query(pool, data):
         elif record[0] == RR_TYPE_SOA:
             name, offset = decode_name(record[2], dictionary, offset)
             nsname, offset = decode_name(record[3], dictionary, offset + 10)
-            mbname, offset = decode_name(record[4], dictionary, offset + 2)
+            mbname, offset = decode_name(record[4], dictionary, offset)
             names = nsname + mbname
             response = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], len(names) + 20) + names + record[5]
             offset = offset + 20
@@ -360,6 +360,7 @@ def decode_name(name, dictionary, offset):
             encoded_name = encoded_name + len(labels[i]).to_bytes(1, byteorder='big') + bytes(labels[i], 'utf-8')
     if compress == False:
         encoded_name = encoded_name + b'\0'
+        offset = offset + 1
     return encoded_name, offset
 
 async def respond(self, query):
