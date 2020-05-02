@@ -200,6 +200,11 @@ async def Query(pool, data):
 
     print(dictionary)
     
+    questions_result = []
+    answers_result = []
+    authority_result = []
+    additional_result = []
+
     questions_data = []
     answers_data = []
     authority_data = []
@@ -235,8 +240,9 @@ async def Query(pool, data):
                         RDATA = record[12].packed
                         print(f'  A IP_Address={RDATA[0]}.{RDATA[1]}.{RDATA[2]}.{RDATA[3]}')
                         if query[0] == RR_TYPE_MX or query[0] == RR_TYPE_SRV:
-                            name = b''
+                            answers_result.append((record[0], record[3], record[2]))
                             labels = record[2].split(".")
+                            name = b''
                             for i in range(len(labels)):
                                 check = ".".join(labels[i:len(labels)])
                                 if check in dictionary:
