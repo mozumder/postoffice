@@ -1,5 +1,5 @@
 #/bin/sh
-./manage.py createdomain --email dns@dnsmadeeasy.com mozumder.net 108.51.234.125 ns0.dnsmadeeasy.com ns1.dnsmadeeasy.com ns2.dnsmadeeasy.com ns3.dnsmadeeasy.com ns4.dnsmadeeasy.com
+./manage.py createdomain --email dns@dnsmadeeasy.com mozumder.net 108.51.234.125 ns0.dnsmadeeasy.com ns1.dnsmadeeasy.com
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 admin
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 api
 ./manage.py addhost -dyn mozumder.net 108.51.234.125 beta
@@ -51,7 +51,7 @@
 ./manage.py addsrvrecord -pri 0 -w 1 mozumder.net _imaps _tcp 993 mail.mozumder.net
 ./manage.py addsrvrecord -pri 0 -w 1 mozumder.net _imap _tcp 143 mail.mozumder.net
 
-./manage.py createdomain --email dns@dnsmadeeasy.com futureclaw.com  108.51.234.125 ns0.dnsmadeeasy.com ns1.dnsmadeeasy.com ns2.dnsmadeeasy.com ns3.dnsmadeeasy.com ns4.dnsmadeeasy.com
+./manage.py createdomain --email dns@dnsmadeeasy.com futureclaw.com  108.51.234.125 ns0.dnsmadeeasy.com ns1.dnsmadeeasy.com ns2.dnsmadeeasy.com
 ./manage.py addhost -dyn futureclaw.com 108.51.234.125 www
 ./manage.py addmailexchange futureclaw.com mail.mozumder.net
 
