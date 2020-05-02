@@ -29,7 +29,7 @@ query_commands = {
 
 async def db_lookup(db_pool, query):
     # FIXME: Capitalized DNS queries.
-    name = protecc_str(".".join(query[3])).lower()
+    name = protecc_str(query[3]).lower()
     print(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {name}')
     results = []
     if query[1] == DNS_CLASS_INTERNET:
