@@ -34,6 +34,7 @@ SELECT
             dns_cname_record.searchname = search
         ) as nxdomain,
     dns_soa_record.ttl as ttl,
+    dns_domain.id as domainid,
     dns_domain.name as domainname,
     dns_soa_record.nameserver as nsname,
     dns_soa_record.rname as rname,
@@ -72,7 +73,7 @@ IF FOUND THEN
     SELECT
         {RR_TYPE_NS} as type,
         result.nxdomain as nxdomain,
-        dns_domain.name as domainname,
+        result.domainname as domainname,
         dns_ns_record.ttl as ttl,
         dns_ns_record.name as nsname,
         NULL::varchar(255) as rname,
@@ -82,10 +83,9 @@ IF FOUND THEN
         NULL::int as expiry,
         NULL::int as nxttl
     FROM
-        dns_domain, dns_ns_record
+        dns_ns_record
     WHERE
-        searchname = dns_domain.name AND
-        dns_domain.id = dns_ns_record.domain_id
+        result.domainid = dns_ns_record.domain_id
     ;
 END IF;
 RETURN ;

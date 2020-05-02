@@ -1,4 +1,3 @@
-# TODO: Label Compression
 # TODO: OPT response
 # TODO: Recursive Lookups
 # TODO: Database triggers
@@ -8,4 +7,5 @@
 # TODO: Extra RRs (HINFO< DNAME, etc..)
 
 # DONE: Multiprocessing UDP
+# DONE: Label Compression
 
