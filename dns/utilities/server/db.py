@@ -22,7 +22,7 @@ query_commands = {
     RR_TYPE_NS:'get_ns_record',
     RR_TYPE_SOA:'get_soa_record',
     RR_TYPE_TXT:'get_txt_record',
-    RR_TYPE_SOA:'get_ptr_record',
+    RR_TYPE_PTR:'get_ptr_record',
     RR_TYPE_CAA:'get_caa_record',
     RR_TYPE_SRV:'get_srv_record',
 }
