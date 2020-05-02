@@ -18,7 +18,7 @@ def worker(receive_queue, send_queue, dsn,):
         response = loop.run_until_complete(Query(db_pool, data))
         send_queue.put(response)
 
-class DNSServerProtocol:
+class MultiprocessorDNSServer:
     def __init__(self, dsn, processes=1):
         self.dsn = dsn
         self.processes = processes
@@ -46,3 +46,38 @@ class DNSServerProtocol:
 #        self.queue.put("Hello")
         self.send_queue.put(data)
         self.transport.sendto(self.receive_queue.get(), addr)
+
+
+class DNSServer:
+    def __init__(self, dsn, processes=1):
+        self.dsn = dsn
+        self.processes = processes
+        self.loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(asyncpg.create_pool(
+                dsn,init=DBConnectInit
+                ))
+        future.add_done_callback(functools.partial(self.pool_made, self))
+    @staticmethod
+    def pool_made(self, future):
+        self.db_pool = future.result()
+
+    def connection_made(self, transport):
+        print("DNS UDP connection created.")
+        self.transport = transport
+
+    def connection_lost(self, exc):
+        if exc == None:
+            print("Connection closed.")
+        else:
+            print("Error. Connection closed.")
+
+    @staticmethod
+    def send(transport, addr, future):
+        transport.sendto(future.result(), addr)
+    
+    def datagram_received(self, data, addr):
+        # TODO: Enable multiprocessing for new datagrams
+#        print(f'Got datagram from {addr} with length {len(data)}')
+#        self.queue.put("Hello")
+        future = asyncio.ensure_future(Query(self.db_pool, data))
+        future.add_done_callback(functools.partial(self.send, self.transport, addr))

@@ -14,8 +14,8 @@ RETURNS TABLE (
     retry INT,
     expiry INT,
     nxttl INT,
-    out_ip_address INET,
-    out_cname VARCHAR(255)
+    out_cname VARCHAR(255),
+    out_ip_address INET
 )
 AS
 $BODY$
@@ -55,8 +55,8 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        dns_aaaa_record.ip_address as ip_address,
-        cname_check.cname as cname
+        cname_check.cname as cname,
+        dns_aaaa_record.ip_address as ip_address
     FROM
         dns_aaaa_record
     WHERE
@@ -74,8 +74,8 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        NULL::inet as ip_address,
-        cname_check.cname as cname
+        cname_check.cname as cname,
+        NULL::inet as ip_address
     UNION
     SELECT
         {RR_TYPE_NS} as type,
@@ -89,8 +89,8 @@ IF FOUND THEN
         NULL::int as retry,
         NULL::int as expiry,
         NULL::int as nxttl,
-        NULL::inet as ip_address,
-        NULL::varchar(255) as cname
+        NULL::varchar(255) as cname,
+        NULL::inet as ip_address
     FROM
         dns_ns_record
     WHERE
@@ -118,7 +118,7 @@ ELSE
     IF FOUND THEN
         RETURN QUERY
         SELECT
-            {RR_TYPE_A} as type,
+            {RR_TYPE_AAAA} as type,
             true as nxdomain,
             result.domainname as domainname,
             result.ttl as ttl,
@@ -129,8 +129,8 @@ ELSE
             NULL::int as retry,
             NULL::int as expiry,
             NULL::int as nxttl,
-            result.ip_address as ip_address,
-            NULL::varchar(255) as cname
+            NULL::varchar(255) as cname,
+            result.ip_address as ip_address
         UNION
         SELECT
             {RR_TYPE_NS} as type,
@@ -144,8 +144,8 @@ ELSE
             NULL::int as retry,
             NULL::int as expiry,
             NULL::int as nxttl,
-            NULL::inet as ip_address,
-            NULL::varchar(255) as cname
+            NULL::varchar(255) as cname,
+            NULL::inet as ip_address
         FROM
             dns_ns_record
         WHERE
@@ -171,8 +171,8 @@ ELSE
             dns_soa_record.retry as retry,
             dns_soa_record.expiry as expiry,
             dns_soa_record.nxttl as nxttl,
-            NULL::inet as ip_address,
-            NULL::varchar(255) as cname
+            NULL::varchar(255) as cname,
+            NULL::inet as ip_address
         FROM
             dns_domain, dns_soa_record
         WHERE

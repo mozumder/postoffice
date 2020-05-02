@@ -2,7 +2,7 @@ import asyncio
 from django.conf import settings
 import asyncpg
 
-from .protocol import DNSServerProtocol
+from .protocol import MultiprocessorDNSServer, DNSServer
 
 def LaunchDNSServer(ip_address='127.0.0.1', port=53, processes=1):
     while True:
@@ -22,9 +22,14 @@ async def UDPListener(ip_address='127.0.0.1', port=53, processes=1):
 
     # One protocol instance will be created to serve all
     # client requests.
-    transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DNSServerProtocol(dsn,processes),
-        local_addr=(ip_address, port))
+    if processes > 1:
+        transport, protocol = await loop.create_datagram_endpoint(
+            lambda: MultiprocessorDNSServer(dsn,processes),
+            local_addr=(ip_address, port))
+    else:
+        transport, protocol = await loop.create_datagram_endpoint(
+            lambda: DNSServer(dsn,processes),
+            local_addr=(ip_address, port))
 
     try:
         await asyncio.sleep(3600)  # Serve for 1 hour.
