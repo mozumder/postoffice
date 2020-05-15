@@ -10,3 +10,5 @@ log/
 venv/
 postgres/
 redis/
+test.sh
+initialize.sh
