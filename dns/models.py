@@ -251,6 +251,9 @@ class A_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
@@ -319,6 +322,9 @@ class AAAA_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
@@ -381,6 +387,9 @@ class CNAME_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Alias Name"),
         max_length=64)
@@ -446,6 +455,9 @@ class MX_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
@@ -519,6 +531,9 @@ class TXT_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
@@ -572,6 +587,9 @@ class PTR_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
@@ -637,6 +655,9 @@ class NS_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
@@ -702,6 +723,9 @@ class SRV_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
@@ -784,6 +808,9 @@ class CAA_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
+    domainname = models.CharField(
+        verbose_name=_("Domain Name"),
+        max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,

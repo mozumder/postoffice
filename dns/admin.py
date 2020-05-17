@@ -63,7 +63,7 @@ class SOA_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('origin'),
             ('rname'),
             ('nameserver'),
@@ -103,7 +103,7 @@ class A_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('ip_address'),
@@ -140,7 +140,7 @@ class AAAA_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('ip_address'),
@@ -210,7 +210,7 @@ class MX_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('hostname'),
@@ -246,7 +246,7 @@ class TXT_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('value'),
@@ -280,7 +280,7 @@ class PTR_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('hostname'),
@@ -315,7 +315,7 @@ class NS_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('delegate'),
@@ -350,7 +350,7 @@ class SRV_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('priority'),
@@ -389,7 +389,7 @@ class CAA_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'domainname'),
             ('name'),
             ('searchname'),
             ('type'),
