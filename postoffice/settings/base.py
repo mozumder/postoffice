@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'accounts',
     'rules',
     'dns',
+    'mail',
 ]
 
 MIDDLEWARE = [

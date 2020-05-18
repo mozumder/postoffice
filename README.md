@@ -72,7 +72,7 @@ Finally you would run the DNS server for your domain by logging into your dns se
 
     $ ssh ns0.mynameservers.com
     postmaster@ns0 $ cd install-directory
-    postmaster@ns0 path-to-install-directory$ ./manage.py rundnsserver 
+    postmaster@ns0 install-directory$ ./manage.py rundnsserver 
 
 Note that you need to run this dns server on two machines, and have them connect to the same database. This is a requirement for the DNS system for redundancy purposes. To do that you will have to log into another system that has the install directory available, and run another DNS server:
 
