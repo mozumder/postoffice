@@ -120,6 +120,6 @@ You can find help on each individual command with:
 
 ## Notes and To-do
 
-Postoffice is in the prototype phase, so use at your own risk. As of now Postoffice is not a DNS recursive resolver. You wouldn't use it for your personal computer's DNS server. Instead, Postoffice is an origin server. You would use it when you register a domain name, and you want the rest of the world to find all the hosts for your domain.  Eventually this will include being a recursive resolver, as well as being secure with DNSSEC and other fun features.
+Postoffice is in the prototype phase, so use at your own risk. As of now Postoffice is not a DNS edge server with a recursive resolver. You wouldn't use it for your personal computer's DNS server. Instead, Postoffice is an origin server. You would use it when you register a domain name, and you want the rest of the world to find all the hosts for your domain.  Eventually this will also be an edge server, as well as adding security through DNSSEC and other fun features, but right now it's specifically a basic origin server.
 
-Ultimately, this project will include an IMAP/SMTP mail server to replace the incredibly complicated Dovecot and Postfix, which is why this project is nameed Postoffice. The DNS server is only the first step to get things going. But that's a long-term goal.
+Ultimately, this project will include an IMAP/SMTP mail server to replace the incredibly complicated Dovecot and Postfix, which is why I started this project and named Postoffice. The DNS server is only the first step to get things going. But that's a long-term goal.
