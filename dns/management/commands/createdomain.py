@@ -88,7 +88,7 @@ class Command(BaseCommand):
             action='store',
             nargs='+',
             default=None,
-            help="List of name servers that will respond authoritatively for the domain. . First nameserver will be primary domain.",
+            help="List of name servers that will respond authoritatively for the domain. First nameserver will be primary domain.",
             )
 
     def handle(self, *args, **options):
