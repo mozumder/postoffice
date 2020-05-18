@@ -118,7 +118,7 @@ You can find help on each individual command with:
 
     % ./manage.py [command] --help
 
-## Todo
+## Notes and To-do
 
 Postoffice is in the prototype phase, so use at your own risk. As of now Postoffice is not a DNS recursive resolver. You wouldn't use it for your personal computer's DNS server. Instead, Postoffice is an origin server. You would use it when you register a domain name, and you want the rest of the world to find all the hosts for your domain.  Eventually this will include being a recursive resolver, as well as being secure with DNSSEC and other fun features.
 
