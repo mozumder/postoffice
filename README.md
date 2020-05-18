@@ -2,9 +2,9 @@
 
 Postoffice is a modern simplified DNS origin server written in Python 3.8 and Django using Postgres as the back-end database. You can administer it from the web interface or from the command line shell:
 
-    $ ./manage.py createdomain --email admin@example.com example.com 123.123.123.123 ns0.mynameservers.com ns1.mynameservers.com
+    $ ./manage.py createdomain --email admin@example.com example.com 123.45.67.89 ns0.mynameservers.com ns1.mynameservers.com
     $ ./manage.py addhost example.com 123.45.67.89 www
-    $ ./manage.py addhost -mx example.com 123.45.67.89 mail
+    $ ./manage.py addhost -mx example.com 123.45.67.90 mail
     $ ./manage.py rundnsserver --processes 4
     
 ## Installation
@@ -57,14 +57,14 @@ At this point you can start to administer and run Postoffice.
 
 You first create a domain that it should serve:
 
-    $ ./manage.py createdomain --email admin@example.com example.com 123.123.123.123 ns0.mynameservers.com ns1.mynameservers.com
+    $ ./manage.py createdomain --email admin@example.com example.com 123.45.67.89 ns0.mynameservers.com ns1.mynameservers.com
     
 This creates the Start-of-authority record as well listing the names of two name servers that would 
 
 Then you can add individual hosts to that domain:
 
-    $ ./manage.py addhost -mx example.com 123.45.67.89 mail
     $ ./manage.py addhost example.com 123.45.67.89 www
+    $ ./manage.py addhost -mx example.com 123.45.67.90 mail
     
 You can configure all sorts of things for your domain, incuding adding TXT and other domain name records.
 
