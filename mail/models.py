@@ -2,8 +2,6 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
-# Create your models here.
-
 class Mailbox(models.Model):
     """Represents a users's real mailbox."""
     user = models.ForeignKey(
@@ -45,7 +43,7 @@ class Message(models.Model):
 
 
 class Envelope(models.Model):
-    """Represents the publicly visible to/from."""
+    """Represents the publicly visible routing of each message."""
     msg = models.OneToOneField(
         'Message',
         on_delete=models.CASCADE)
