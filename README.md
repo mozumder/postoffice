@@ -7,6 +7,8 @@ Postoffice is a modern simplified DNS origin server written in Python 3.8 and Dj
     $ ./manage.py addhost -mx example.com 123.45.67.90 mail
     $ ./manage.py rundnsserver --processes 4
     
+It even includes a DNS-over-HTTP server under the url /dns/query?dns
+    
 ## Installation
 
 First, download and install Postgresql. Instructions for that are platform-specific and outside of the scope of this document, so please visit [https://www.postgresql.org/download/](https://www.postgresql.org/download/ "Postgresql")  to download for your platform.
@@ -59,7 +61,7 @@ You first create a domain that it should serve:
 
     $ ./manage.py createdomain --email admin@example.com example.com 123.45.67.89 ns0.mynameservers.com ns1.mynameservers.com
     
-This creates the Start-of-authority record as well listing the names of two name servers that would 
+This creates the Start-of-authority record as well listing the names of two name servers that this are the origin name servers for the domain.
 
 Then you can add individual hosts to that domain:
 

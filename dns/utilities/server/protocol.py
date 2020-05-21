@@ -41,7 +41,6 @@ class MultiprocessorDNSServer:
             print("Error. Connection closed.")
 
     def datagram_received(self, data, addr):
-        # TODO: Enable multiprocessing for new datagrams
 #        print(f'Got datagram from {addr} with length {len(data)}')
 #        self.queue.put("Hello")
         self.send_queue.put(data)
@@ -76,7 +75,6 @@ class DNSServer:
         transport.sendto(future.result(), addr)
     
     def datagram_received(self, data, addr):
-        # TODO: Enable multiprocessing for new datagrams
 #        print(f'Got datagram from {addr} with length {len(data)}')
 #        self.queue.put("Hello")
         future = asyncio.ensure_future(Query(self.db_pool, data))
