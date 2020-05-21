@@ -10,6 +10,8 @@ Postoffice is a modern simplified DNS origin server written in Python 3.8 and Dj
 It even includes a DNS-over-HTTP server under the url /dns/query?dns when you run the Django web server:
 
     $ ./manage.py runserver
+    
+To make this a DNS-over-HTTPS server, just run Django through a reverse proxy HTTPS server like h2o or Nginx with a WSGI interface.
 
 ## Installation
 
@@ -48,8 +50,10 @@ Add the following lines to the .env file:
     POSTGRES_HOST=127.0.0.1
     POSTGRES_PORT=
     POSTGRES_USER=postmaster
-    POSTGRES_PW=postgres-passwprd
+    POSTGRES_PW=postgres-password
     POSTGRES_DB=postoffice
+
+(lol yes all this is going to go in a single setup script)
     
 You then initialize the Django database 
 
