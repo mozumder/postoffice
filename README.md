@@ -67,7 +67,7 @@ You first create a domain that it should serve:
 
     $ ./manage.py createdomain --email admin@example.com example.com 123.45.67.89 ns0.mynameservers.com ns1.mynameservers.com
     
-This creates the Start-of-authority record as well listing the names of two name servers that this are the origin name servers for the domain.
+This creates the Start-of-Authority record as well listing the names of two name servers that are the origin name servers for the domain. This means you normally have to run a separate domain just for your origin name servers, which is why origin DNS servers are normally used only by ISPs.
 
 Then you can add individual hosts to that domain:
 
