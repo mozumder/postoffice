@@ -7,8 +7,10 @@ Postoffice is a modern simplified DNS origin server written in Python 3.8 and Dj
     $ ./manage.py addhost -mx example.com 123.45.67.90 mail
     $ ./manage.py rundnsserver --processes 4
     
-It even includes a DNS-over-HTTP server under the url /dns/query?dns
-    
+It even includes a DNS-over-HTTP server under the url /dns/query?dns when you run the Django web server:
+
+    $ ./manage.py runserver
+
 ## Installation
 
 First, download and install Postgresql. Instructions for that are platform-specific and outside of the scope of this document, so please visit [https://www.postgresql.org/download/](https://www.postgresql.org/download/ "Postgresql")  to download for your platform.
