@@ -4,7 +4,7 @@
 # TODO: Redis cache
 # TODO: DNSSEC
 # TODO: Documentation
-# TODO: Extra RRs (HINFO< DNAME, etc..)
+# TODO: Extra RRs (HINFO, DNAME, etc..)
 
 # DONE: Multiprocessing UDP
 # DONE: Label Compression

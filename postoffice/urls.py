@@ -16,6 +16,9 @@ Including another URLconf
 from django.urls import path,include
 from django.contrib import admin
 from django.conf import settings
+admin.site.site_header = "Postoffice Administration"
+admin.site.site_title = "Postoffice Admin Portal"
+admin.site.index_title = "Welcome to Postoffice Admin Portal!"
 
 urlpatterns = [
     path('dns/', include('dns.urls')),
