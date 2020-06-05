@@ -19,25 +19,25 @@ First, download and install Postgresql. Instructions for that are platform-speci
 
 Once you have Postgresql installed and running, create a Postgresql user as well as a database for Postoffice. This can be done with Postgresql's psql command shell by logging in as a Postgres administrator:
 
-    $ psql -U postgres
+    % psql -U postgres
     postgres=# create role postmaster with login passowrd 'pick-a-password';
     postgres=# create database postoffice with owner postmaster;
     postgres=# exit
 
 Next, download Postffice by cloning this repository:
 
-    $ git clone https://github.com/mozumder/postoffice.git
-    $ cd postoffice
+    % git clone https://github.com/mozumder/postoffice.git
+    % cd postoffice
 
 Then, install all the Python components, including Django, by running installing from the pip requirements.txt file:
 
-    $ pip install -r requirements.txt
+    % pip install -r requirements.txt
     
 (Hint: use a Python virtualenvironment so you don't clobber the base python instlalation)
 
 Inside this directory, create a .env vile with some basic information to run Django:
 
-    $ vi .env
+    % vi .env
     
 Add the following lines to the .env file:
     
