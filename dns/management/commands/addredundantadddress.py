@@ -61,7 +61,6 @@ class Command(BaseCommand):
             raise CommandError("Need an IP Address.")
         if options['host'] == None:
             print("Using blank host name.")
-        
         searchname = options['host'] + "." + domainname
 
         try:
