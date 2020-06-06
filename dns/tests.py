@@ -14,7 +14,7 @@ class DNSTest(SimpleTestCase):
     def setUpClass(cls):
         super().setUpClass()
         my_env = {**os.environ, 'DJANGO_RUN_ENV': 'test'}
-        my_admin = User.objects.create_superuser('myuser', 'myemail@test.com', 'mypassword')
+        my_admin = User.objects.create_superuser('tester', 'test@example.net', 'nopassword')
 
 #        proc = subprocess.Popen(
 #            ["./manage.py", 'createsuperuser', '--username', 'tester', '--email', 'test@example.net', '--noinput'],
@@ -56,7 +56,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
             ['dig', '-p', '2123', '@127.0.0.1', 'example.net', '+nostat'],
             stdout=subprocess.PIPE)
         outputstring = result.stdout.decode('utf-8')
-        print(outputstring)
+
         self.assertIn(test, outputstring)
 
     def test_admindomain(self):
@@ -74,7 +74,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
             ['dig', '-p', '2123', '@127.0.0.1', 'admin.example.net', '+nostat'],
             stdout=subprocess.PIPE)
         outputstring = result.stdout.decode('utf-8')
-        print(outputstring)
+
         self.assertIn(test, outputstring)
 
 """./manage.py createdomain --email dns@example.net example.net 199.29.17.254 ns0.dnsprovider.com ns1.dnsprovider.com
