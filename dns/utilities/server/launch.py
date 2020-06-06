@@ -4,12 +4,15 @@ import asyncpg
 
 from .protocol import MultiprocessorDNSServer, DNSServer
 
-def LaunchDNSServer(ip_address='127.0.0.1', port=53, processes=1):
+def LaunchDNSServer(ip_address='127.0.0.1', port=53, processes=1, test_mode=False):
     while True:
-        asyncio.run(UDPListener(ip_address, port, processes),)
+        asyncio.run(UDPListener(ip_address, port, processes,test_mode),)
 
-async def UDPListener(ip_address='127.0.0.1', port=53, processes=1):
-    db_name = settings.DATABASES['default']['NAME']
+async def UDPListener(ip_address='127.0.0.1', port=53, processes=1, test_mode=False):
+    if test_mode:
+        db_name = 'test_'+settings.DATABASES['default']['NAME']
+    else:
+        db_name = settings.DATABASES['default']['NAME']
     db_user = settings.DATABASES['default']['USER']
     db_password = settings.DATABASES['default']['PASSWORD']
     db_host = settings.DATABASES['default']['HOST']

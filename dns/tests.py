@@ -1,18 +1,83 @@
+import unittest
 from io import StringIO
+import subprocess, os
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, SimpleTestCase
 from django.contrib.auth.models import User
+from django.test.testcases import SerializeMixin
 
 # Create your tests here.
-class DNSTest(TestCase):
-    def test_command_output(self):
-        out = StringIO()
-        password = 'mypassword'
-        my_admin = User.objects.create_superuser('myuser', 'myemail@test.com', password)
-        call_command('createdomain', 'example.net', '199.29.17.254', 'ns0.dnsprovider.com ns1.dnsprovider.com', email='dns@example.net', stdout=StringIO())
-        self.assertIn('Expected output', out.getvalue())
 
-"""./manage.py createdomain --email dns@example.com example.net 199.29.17.254 ns0.dnsprovider.com ns1.dnsprovider.com
+class DNSTest(SimpleTestCase):
+    databases = '__all__'
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        my_env = {**os.environ, 'DJANGO_RUN_ENV': 'test'}
+        my_admin = User.objects.create_superuser('myuser', 'myemail@test.com', 'mypassword')
+
+#        proc = subprocess.Popen(
+#            ["./manage.py", 'createsuperuser', '--username', 'tester', '--email', 'test@example.net', '--noinput'],
+#            env=my_env
+#        )
+#        proc.wait()
+        proc = subprocess.Popen(
+            ["./manage.py", 'createdomain', 'example.net', '199.29.17.254', 'ns0.dnsprovider.com', 'ns1.dnsprovider.com'],
+            env=my_env
+        )
+        proc.wait()
+        proc = subprocess.Popen(
+            ["./manage.py", 'addhost', '-dyn', 'example.net', '199.29.17.254', 'admin'],
+            env=my_env
+        )
+        proc.wait()
+        cls.proc = subprocess.Popen(
+            ["./manage.py", "rundnsserver", '--port', '2123'],
+            env=my_env
+        )
+        print(f'Spawned DNS server with process id {cls.proc.pid}')
+    @classmethod
+    def tearDownClass(cls):
+        cls.proc.kill()
+        super().tearDownClass()
+
+    def test_domain(self):
+        test=""";; QUESTION SECTION:
+;example.net.			IN	A
+
+;; ANSWER SECTION:
+example.net.		14400	IN	A	199.29.17.254
+
+;; AUTHORITY SECTION:
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
+example.net.		14400	IN	NS	ns1.dnsprovider.com.
+"""
+        result = subprocess.run(
+            ['dig', '-p', '2123', '@127.0.0.1', 'example.net', '+nostat'],
+            stdout=subprocess.PIPE)
+        outputstring = result.stdout.decode('utf-8')
+        print(outputstring)
+        self.assertIn(test, outputstring)
+
+    def test_admindomain(self):
+        test=""";; QUESTION SECTION:
+;admin.example.net.		IN	A
+
+;; ANSWER SECTION:
+admin.example.net.	14400	IN	A	199.29.17.254
+
+;; AUTHORITY SECTION:
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
+example.net.		14400	IN	NS	ns1.dnsprovider.com.
+"""
+        result = subprocess.run(
+            ['dig', '-p', '2123', '@127.0.0.1', 'admin.example.net', '+nostat'],
+            stdout=subprocess.PIPE)
+        outputstring = result.stdout.decode('utf-8')
+        print(outputstring)
+        self.assertIn(test, outputstring)
+
+"""./manage.py createdomain --email dns@example.net example.net 199.29.17.254 ns0.dnsprovider.com ns1.dnsprovider.com
 ./manage.py addhost -dyn example.net 199.29.17.254 admin
 ./manage.py addhost -dyn example.net 199.29.17.254 api
 ./manage.py addhost -dyn example.net 199.29.17.254 beta

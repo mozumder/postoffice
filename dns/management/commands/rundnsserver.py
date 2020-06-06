@@ -30,6 +30,11 @@ class Command(BaseCommand):
             type=int,
             default=1,
             help="Number of concurrent processes to run")
+        parser.add_argument(
+            '-t', '--test_mode',
+            action='store_true',
+            default=False,
+            help="Run with test database.")
 
     def handle(self, *args, **options):
         if options['ip_address'] == None:
@@ -37,4 +42,4 @@ class Command(BaseCommand):
         if options['port'] == None:
             raise CommandError("Need a port.")
 
-        LaunchDNSServer(options['ip_address'], options['port'], options['processes'])
+        LaunchDNSServer(options['ip_address'], options['port'], options['processes'], options['test_mode'])
