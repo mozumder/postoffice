@@ -789,7 +789,85 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'mail2.example.net'],
             stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
-        print(output)
+        self.assertIn(test, output)
+
+    def test_caa_record(self):
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;example.net.			IN	CAA
+
+;; ANSWER SECTION:
+example.net.		14400	IN	CAA	0 issue "letsencrypt.org"
+example.net.		14400	IN	CAA	0 iodef "mailto:info@example.net"
+
+;; AUTHORITY SECTION:
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
+example.net.		14400	IN	NS	ns1.dnsprovider.com.
+"""
+        result = subprocess.run(
+            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'example.net', 'CAA'],
+            stdout=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        self.assertIn(test, output)
+
+    def test_srv_record(self):
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;_imaps._tcp.example.net.	IN	SRV
+
+;; ANSWER SECTION:
+_imaps._tcp.example.net. 14400	IN	SRV	0 1 993 mail.example.net.
+
+;; AUTHORITY SECTION:
+example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
+
+;; ADDITIONAL SECTION:
+mail.example.net.	14400	IN	A	199.29.17.254
+"""
+        result = subprocess.run(
+            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', '_imaps._tcp.example.net', 'SRV'],
+            stdout=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        self.assertIn(test, output)
+
+    def test_srv_record_cap(self):
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+
+;; QUESTION SECTION:
+;_imapS._tcP.examplE.neT.	IN	SRV
+
+;; ANSWER SECTION:
+_imapS._tcP.examplE.neT. 14400	IN	SRV	0 1 993 mail.example.net.
+
+;; AUTHORITY SECTION:
+example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
+
+;; ADDITIONAL SECTION:
+mail.example.net.	14400	IN	A	199.29.17.254
+"""
+        result = subprocess.run(
+            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', '_imapS._tcP.examplE.neT', 'SRV'],
+            stdout=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
+        self.assertIn(test, output)
+
+    def test_negative_srv_record(self):
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;_tcp.example.net.		IN	SRV
+
+;; AUTHORITY SECTION:
+example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 2419200 180
+"""
+        result = subprocess.run(
+            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', '_tcp.example.net', 'SRV'],
+            stdout=subprocess.PIPE)
+        output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
 
