@@ -32,6 +32,11 @@ class DNSTest(SimpleTestCase):
         )
         proc.wait()
         proc = subprocess.Popen(
+            ["./manage.py", 'addhost', '-dyn', 'example.net', '199.29.17.254', 'mail'],
+            env=my_env
+        )
+        proc.wait()
+        proc = subprocess.Popen(
             ["./manage.py", 'addhost', '-dyn', 'example.net', '199.29.17.254', 'cdn'],
             env=my_env
         )
@@ -748,23 +753,22 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_cname_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
 
 ;; QUESTION SECTION:
-;mail2.example.net.		IN	A
+;mail2.example.net.		IN	CNAME
 
 ;; ANSWER SECTION:
 mail2.example.net.	14400	IN	CNAME	mail.example.net.
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns1.dnsprovider.com.
 example.net.		14400	IN	NS	ns0.dnsprovider.com.
+example.net.		14400	IN	NS	ns1.dnsprovider.com.
 """
         result = subprocess.run(
-            ['dig', '-p', '2123', '+nostat', 'mail2.example.net', 'CNAME'],
+            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'mail2.example.net', 'CNAME'],
             stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
-        print(output)
         self.assertIn(test, output)
 
     def test_a_cname_record_subdomain(self):
@@ -782,7 +786,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
-            ['dig', '-p', '2123', '+nostat', 'mail2.example.net'],
+            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'mail2.example.net'],
             stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         print(output)
