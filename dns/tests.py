@@ -120,15 +120,18 @@ class DNSTest(SimpleTestCase):
         """Test domain A record lookup. Should return succesful DNS lookup and
 additional authority data.
         """
-        test=""";; QUESTION SECTION:
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+
+;; QUESTION SECTION:
 ;example.net.			IN	A
 
 ;; ANSWER SECTION:
 example.net.		14400	IN	A	199.29.17.254
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
+
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'example.net'],
@@ -146,8 +149,8 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 example.neT.		14400	IN	A	199.29.17.254
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'example.neT'],
@@ -189,8 +192,8 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 www.example.net.	14400	IN	A	199.29.17.254
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'www.example.net'],
@@ -359,8 +362,8 @@ cdn.example.net.	14400	IN	A	199.29.17.254
 cdn.example.net.	14400	IN	A	6.113.127.2
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'cdn.example.net'],
