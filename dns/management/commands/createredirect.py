@@ -57,7 +57,7 @@ class Command(BaseCommand):
             raise CommandError('Domain not found. Exiting')
 
         canonical_name = options['host'] + '.' + options['domain']
-        cname_record, cname_created = CNAME_Record.objects.get_or_create(domain=domain, name=options['alias'], canonical_name = canonical_name)
+        cname_record, cname_created = CNAME_Record.objects.get_or_create(domain=domain,searchdomain=domain.name, name=options['alias'], canonical_name = canonical_name)
         h = Host.objects.filter(domain=domain,name=options['host'])
         if h:
             cname_record.host = h[0]

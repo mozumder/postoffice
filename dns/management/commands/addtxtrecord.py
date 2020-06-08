@@ -57,7 +57,7 @@ class Command(BaseCommand):
         except:
             raise CommandError('Domain not found. Exiting')
 
-        txt_record = TXT_Record.objects.create(domain=domain, value=options['value'])
+        txt_record = TXT_Record.objects.create(domain=domain,searchdomain=domain.name, value=options['value'])
         txt_record.searchname = searchname
         txt_record.name = options['name']
         txt_record.ttl = options['ttl']

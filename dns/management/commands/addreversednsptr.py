@@ -62,7 +62,7 @@ class Command(BaseCommand):
         except:
             raise CommandError("Zone not found.")
 
-        ptr_record, ptr_created = PTR_Record.objects.get_or_create(domain=zone, hostname=options['host'], name = searchname)
+        ptr_record, ptr_created = PTR_Record.objects.get_or_create(domain=zone,searchdomain=zone.name, hostname=options['host'], name = searchname)
         h = Host.objects.filter(domain=host_domain, name=hostname)
         if h:
             ptr_record.host = h[0]

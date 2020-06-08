@@ -74,7 +74,7 @@ class Command(BaseCommand):
         except:
             raise CommandError('Domain not found. Exiting')
 
-        caa_record = CAA_Record.objects.create(domain=domain, value=options['value'])
+        caa_record = CAA_Record.objects.create(domain=domain,searchdomain=domain.name, value=options['value'])
         caa_record.searchname = searchname
         caa_record.name = options['name']
         caa_record.ttl = options['ttl']

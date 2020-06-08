@@ -73,7 +73,7 @@ class Command(BaseCommand):
             print(f'No existing host. Existing.')
             return
 
-        a_record = A_Record.objects.create(domain=domain, name=options['host'], ip_address = options['ip_address'])
+        a_record = A_Record.objects.create(domain=domain,searchdomain=domain.name, name=options['host'], ip_address = options['ip_address'])
         a_record.host = h
         a_record.searchname = searchname
         a_record.ttl = options['ttl']
@@ -83,7 +83,7 @@ class Command(BaseCommand):
         print(f'Created A Record {a_record} under domain {domain} for host {h}.')
 
         if options['ipv6']:
-            aaaa_record = AAAA_Record.objects.create(domain=domain, name=options['host'], ip_address = options['ipv6'])
+            aaaa_record = AAAA_Record.objects.create(domain=domain,searchdomain=domain.name, name=options['host'], ip_address = options['ipv6'])
             aaaa_record.host = h
             aaaa_record.searchname = searchname
             aaaa_record.ttl = options['ttl']

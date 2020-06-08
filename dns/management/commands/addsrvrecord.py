@@ -96,7 +96,7 @@ _udp - UDP protocol""",
             raise CommandError('Domain not found. Exiting')
 
         srv_record = SRV_Record.objects.create(
-            domain=domain,
+            domain=domain,searchdomain=domain.name,
             name=name,
             searchname=searchname,
             ttl=options['ttl'],

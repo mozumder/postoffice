@@ -52,7 +52,7 @@ class Command(BaseCommand):
         except:
             raise CommandError('Domain not found. Exiting')
 
-        mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname = options['host'])
+        mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain,searchdomain=domain.name, name=domain.name, hostname = options['host'])
         h = Host.objects.filter(domain=domain,name=options['host'])
         if h:
             cname_record.host = h[0]

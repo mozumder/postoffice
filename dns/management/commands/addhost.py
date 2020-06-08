@@ -89,7 +89,7 @@ class Command(BaseCommand):
         else:
             print(f'Host {h} under domain {h.domain} already exists.')
 
-        a_record, a_created = A_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ip_address'])
+        a_record, a_created = A_Record.objects.get_or_create(domain=domain,searchdomain=domain.name, name=options['host'], ip_address = options['ip_address'])
         a_record.host = h
         a_record.searchname = searchname
         a_record.ttl = options['ttl']
@@ -102,7 +102,7 @@ class Command(BaseCommand):
             print(f'A Record {a_record} under domain {domain} updated.')
 
         if options['ipv6']:
-            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=domain, name=options['host'], ip_address = options['ipv6'])
+            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=domain,searchdomain=domain.name, name=options['host'], ip_address = options['ipv6'])
             aaaa_record.host = h
             aaaa_record.searchname = searchname
             aaaa_record.ttl = options['ttl']
@@ -114,7 +114,7 @@ class Command(BaseCommand):
                 print(f'AAAA Record {aaaa_record} under domain {domain} updated.')
 
         if options['mx']:
-            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain, name=domain.name, hostname=searchname)
+            mx_record, mx_created = MX_Record.objects.get_or_create(domain=domain,searchdomain=domain.name, name=domain.name, hostname=searchname)
             mx_record.host = h
             mx_record.searchname = domain.name
             mx_record.ttl = options['ttl']

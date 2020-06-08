@@ -175,8 +175,8 @@ class SOA_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    origin = models.CharField(
-        verbose_name=_("Origin"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255,
         null=True, blank=True)
     rname = models.CharField(
@@ -219,7 +219,7 @@ class SOA_Record(models.Model):
         verbose_name=_("Date Updated"),
         auto_now=True)
     def __str__(self):
-        return f'{self.origin}'
+        return f'{self.searchdomain}'
     def domain_name(self):
         names = self.name.split(".")[1:]
         tld = names[-1]
@@ -251,15 +251,15 @@ class A_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     ip_address = models.GenericIPAddressField(
@@ -322,15 +322,15 @@ class AAAA_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     ip_address = models.GenericIPAddressField(
@@ -387,14 +387,14 @@ class CNAME_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Alias Name"),
         max_length=64)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     canonical_name = models.CharField(
@@ -455,15 +455,15 @@ class MX_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     hostname = models.CharField(
@@ -531,15 +531,15 @@ class TXT_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     value = models.CharField(
@@ -587,14 +587,14 @@ class PTR_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     hostname = models.CharField(
@@ -655,14 +655,14 @@ class NS_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
     delegate = models.CharField(
@@ -723,8 +723,8 @@ class SRV_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
@@ -808,15 +808,15 @@ class CAA_Record(models.Model):
         Domain,
         verbose_name=_("Domain"),
         on_delete=models.CASCADE)
-    domainname = models.CharField(
-        verbose_name=_("Domain Name"),
+    searchdomain = models.CharField(
+        verbose_name=_("Search Domain Name"),
         max_length=255)
     name = models.CharField(
         verbose_name=_("Name"),
         max_length=64,
         null=True, blank=True)
     searchname = models.CharField(
-        verbose_name=_("Fully Qualified Domain Name"),
+        verbose_name=_("Search Name"),
         max_length=255,
         null=True, blank=True)
 #    provider = models.CharField(

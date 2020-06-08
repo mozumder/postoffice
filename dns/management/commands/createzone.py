@@ -98,7 +98,7 @@ class Command(BaseCommand):
         else:
             print(f'Domain {d} with owner {d.owner} already exists.')
 
-        soa_record, soa_created = SOA_Record.objects.get_or_create(domain=d)
+        soa_record, soa_created = SOA_Record.objects.get_or_create(domain=d,searchdomain=d.name)
         soa_record.host = None
         soa_record.ttl = options['ttl']
         soa_record.rname = email
@@ -117,7 +117,7 @@ class Command(BaseCommand):
             print(f'SOA Record {soa_record} under domain {d} updated.')
 
         for ns in options['name_server']:
-            ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,name=ns)
+            ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,searchdomain=d.name,name=ns)
             ns_record.ttl = options['ttl']
             ns_record.searchname = domainname
             ns_record.source = SOURCE_SCRIPT

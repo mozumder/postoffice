@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from dns.models import Domain, A_Record, AAAA_Record, SOA_Record, NS_Record, SOURCE_SCRIPT
+from dns.models import Domain, Host, A_Record, AAAA_Record, SOA_Record, NS_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
     help = ("Create a domain with username as its owner")
@@ -119,8 +119,15 @@ class Command(BaseCommand):
         else:
             print(f'Domain {d} with owner {d.owner} already exists.')
 
-        a_record, a_created = A_Record.objects.get_or_create(domain=d,name=None, ip_address=options['ip_address'])
-        a_record.host = None
+        h, h_created = Host.objects.get_or_create(domain=d,name=domainname)
+        h.save()
+        if h_created:
+            print(f'Created host {h} under domain {h.domain}.')
+        else:
+            print(f'Host {h} under domain {h.domain} already exists.')
+
+        a_record, a_created = A_Record.objects.get_or_create(domain=d,searchdomain=domainname, name=None, ip_address=options['ip_address'])
+        a_record.host = h
         a_record.searchname = domainname
         a_record.ttl = options['ttl']
         a_record.dynamic_ip = options['dynamic_ip']
@@ -131,8 +138,8 @@ class Command(BaseCommand):
         else:
             print(f'A Record {a_record} under domain {d} updated.')
 
-        soa_record, soa_created = SOA_Record.objects.get_or_create(domain=d)
-        soa_record.host = None
+        soa_record, soa_created = SOA_Record.objects.get_or_create(domain=d,searchdomain=domainname)
+        soa_record.host = h
         soa_record.ttl = options['ttl']
         soa_record.rname = email
         soa_record.mname = options['name']
@@ -150,7 +157,7 @@ class Command(BaseCommand):
             print(f'SOA Record {soa_record} under domain {d} updated.')
 
         for ns in options['name_server']:
-            ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,name=ns)
+            ns_record, ns_created = NS_Record.objects.get_or_create(domain=d,searchdomain=domainname,name=ns)
             ns_record.ttl = options['ttl']
             ns_record.searchname = domainname
             ns_record.source = SOURCE_SCRIPT
@@ -162,7 +169,7 @@ class Command(BaseCommand):
 
 
         if options['ipv6']:
-            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=d, name=None, ip_address = options['ipv6'])
+            aaaa_record, aaaa_created = AAAA_Record.objects.get_or_create(domain=d,searchdomain=domainname, name=None, ip_address = options['ipv6'])
             aaaa_record.host = h
             aaaa_record.searchname = domainname
             aaaa_record.ttl = options['ttl']

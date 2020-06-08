@@ -58,13 +58,12 @@ class SOA_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', domain, 'origin', 'rname', 'nameserver', 'refresh', 'retry', 'expiry', 'nxttl', 'ttl', 'serial', 'date_updated']
+    list_display = ['__str__', domain, 'searchdomain', 'rname', 'nameserver', 'refresh', 'retry', 'expiry', 'nxttl', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
-            ('origin'),
+            ('domain', 'searchdomain'),
             ('rname'),
             ('nameserver'),
             ('nameserver_host'),
@@ -103,7 +102,7 @@ class A_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('ip_address'),
@@ -140,7 +139,7 @@ class AAAA_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('ip_address'),
@@ -175,7 +174,7 @@ class CNAME_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('canonical_name'),
@@ -210,7 +209,7 @@ class MX_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('hostname'),
@@ -246,7 +245,7 @@ class TXT_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('value'),
@@ -280,7 +279,7 @@ class PTR_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('hostname'),
@@ -315,7 +314,7 @@ class NS_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('delegate'),
@@ -350,7 +349,7 @@ class SRV_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('priority'),
@@ -389,7 +388,7 @@ class CAA_RecordAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
-            ('domain', 'domainname'),
+            ('domain', 'searchdomain'),
             ('name'),
             ('searchname'),
             ('type'),
