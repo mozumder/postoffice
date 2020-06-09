@@ -102,12 +102,14 @@ WHERE
 UNION
 (SELECT
     {RR_TYPE_SOA} as type,
-    exists(
+    EXISTS(
         SELECT 1
-        FROM
-            dns_aaaa_record
-        WHERE
-            dns_aaaa_record.searchname = $1
+            FROM
+                dns_aaaa_record,
+                dns_cname_record
+            WHERE
+                dns_aaaa_record.searchname = $1 OR
+                dns_cname_record.searchname = $1
     ) as nxdomain,
     dns_domain.name as domainname,
     dns_soa_record.ttl as ttl,

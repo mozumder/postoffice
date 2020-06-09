@@ -396,8 +396,8 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
 smtp.example.net.	14400	IN	AAAA	fe80::dead:beef:cafe:babe
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'smtp.example.net', 'AAAA'],
@@ -415,27 +415,8 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 smtP.example.net.	14400	IN	AAAA	fe80::dead:beef:cafe:babe
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
-"""
-        result = subprocess.run(
-            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'smtP.example.net', 'AAAA'],
-            stdout=subprocess.PIPE)
-        output = result.stdout.decode('utf-8')
-        self.assertIn(test, output)
-
-    def test_aaaa_record_subdomain_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
-
-;; QUESTION SECTION:
-;smtP.example.net.		IN	AAAA
-
-;; ANSWER SECTION:
-smtP.example.net.	14400	IN	AAAA	fe80::dead:beef:cafe:babe
-
-;; AUTHORITY SECTION:
 example.net.		14400	IN	NS	ns0.dnsprovider.com.
-example.net.		14400	IN	NS	ns1.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'smtP.example.net', 'AAAA'],
@@ -515,6 +496,10 @@ mail.example.net.	14400	IN	A	199.29.17.254
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'example.neT', 'MX'],
             stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
+        print('--test--')
+        print(test)
+        print('--output--')
+        print(output)
         self.assertIn(test, output)
 
     def test_negative_mx_record(self):
@@ -765,8 +750,8 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 mail2.example.net.	14400	IN	CNAME	mail.example.net.
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'mail2.example.net', 'CNAME'],
