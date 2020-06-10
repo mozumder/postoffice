@@ -216,7 +216,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
-    def test_soa_record(self):
+    def test_soa_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
 
 ;; QUESTION SECTION:
@@ -284,26 +284,6 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
             stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
-
-    def test_soa_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
-
-;; QUESTION SECTION:
-;www.example.net.		IN	SOA
-
-;; ANSWER SECTION:
-example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 2419200 180
-
-;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
-example.net.		14400	IN	NS	ns1.dnsprovider.com.
-"""
-        result = subprocess.run(
-            ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'www.example.net', 'SOA'],
-            stdout=subprocess.PIPE)
-        output = result.stdout.decode('utf-8')
-        self.assertIn(test, output)
-
 
     def test_soa_record_negative_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
@@ -496,10 +476,6 @@ mail.example.net.	14400	IN	A	199.29.17.254
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', 'example.neT', 'MX'],
             stdout=subprocess.PIPE)
         output = result.stdout.decode('utf-8')
-        print('--test--')
-        print(test)
-        print('--output--')
-        print(output)
         self.assertIn(test, output)
 
     def test_negative_mx_record(self):
@@ -625,9 +601,9 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
 ;example.net.			IN	TXT
 
 ;; ANSWER SECTION:
-example.net.		14400	IN	TXT	"Sendinblue-code:3fe1ac48ac4588d17c0515b589b70bf4"
 example.net.		14400	IN	TXT	"google-site-verification=Fi4VWVWVF8D0njI1JTUbXzKpQRGwYbPw6tgYUCdW5xc"
 example.net.		14400	IN	TXT	"v=spf1 a mx ptr include:spf.sendinblue.com +ip4:199.29.17.254 +ip4:6.113.127.2 -all"
+example.net.		14400	IN	TXT	"Sendinblue-code:3fe1ac48ac4588d17c0515b589b70bf4"
 
 ;; AUTHORITY SECTION:
 example.net.		14400	IN	NS	ns0.dnsprovider.com.
@@ -646,9 +622,9 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 ;examplE.neT.			IN	TXT
 
 ;; ANSWER SECTION:
-examplE.neT.		14400	IN	TXT	"Sendinblue-code:3fe1ac48ac4588d17c0515b589b70bf4"
 examplE.neT.		14400	IN	TXT	"google-site-verification=Fi4VWVWVF8D0njI1JTUbXzKpQRGwYbPw6tgYUCdW5xc"
 examplE.neT.		14400	IN	TXT	"v=spf1 a mx ptr include:spf.sendinblue.com +ip4:199.29.17.254 +ip4:6.113.127.2 -all"
+examplE.neT.		14400	IN	TXT	"Sendinblue-code:3fe1ac48ac4588d17c0515b589b70bf4"
 
 ;; AUTHORITY SECTION:
 example.net.		14400	IN	NS	ns0.dnsprovider.com.
@@ -712,8 +688,8 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
 2020060201._domainkey.example.net. 14400 IN TXT	"v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8BMIIBCgKCAQEA0kIjkMO4lXDTvmtiYdAv7ieKOQJXAKp+2wfXfvAG0Jex7APqKWnl816b4/voyyy8JcsrFph2Ug1EAKlSp9Rx/BomZM8aT1HmWeU4yIBvziexOTIsyRD5L6cveu38l7oIaruPJma4t8rHqQZfqLnHNWSO4lrkXKrGUYWTEN58DVjOmKAWSeTR6IPreb2qHiY2K" "Vb5iJOv/zhR322yf5BC3JvxZ56BDXATaMjjVYpDNTslQp7jbu1wwxlmh2S5xx7VNqs7Zv90Yb2dIGQmgsJnh3YQhwibWK2CUbzeD9jXXq1RIs/wzTrK4cgutzHvOPTHoEMaB7RfbdGU9PTYWAmAbwIDAQAB"
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', '2020060201._domainkey.example.net', 'TXT'],
@@ -731,8 +707,8 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
 _dmarc.example.net.	14400	IN	TXT	"v=DMARC1; p=reject; sp=reject; rua=mailto:dmarcrua@example.net!10m; ruf=mailto:dmarcruf@example.net!10m; rf=afrf; pct=100; ri=86400"
 
 ;; AUTHORITY SECTION:
-example.net.		14400	IN	NS	ns0.dnsprovider.com.
 example.net.		14400	IN	NS	ns1.dnsprovider.com.
+example.net.		14400	IN	NS	ns0.dnsprovider.com.
 """
         result = subprocess.run(
             ['dig', '-p', '2123', '+nostat', '@127.0.0.1', '_dmarc.example.net', 'TXT'],

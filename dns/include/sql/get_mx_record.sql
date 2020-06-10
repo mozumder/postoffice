@@ -5,9 +5,15 @@ WITH mx_record AS (
         dns_mx_record.preference as preference,
         dns_mx_record.searchdomain as domainname,
         dns_mx_record.ttl as ttl,
-        dns_mx_record.domain_id as domain_id
+        dns_mx_record.domain_id as domain_id,
+        dns_a_record.ip_address as ip_address,
+        dns_a_record.ttl as a_ttl
     FROM
         dns_mx_record
+    LEFT OUTER JOIN
+        dns_a_record
+    ON
+        dns_a_record.host_id = dns_mx_record.host_id
     WHERE
         dns_mx_record.searchname = $1
 )
@@ -26,6 +32,26 @@ SELECT
     mx_record.hostname as hostname,
     NULL::inet as ip_address,
     mx_record.preference as preference
+FROM
+    mx_record
+WHERE
+    mx_record.hostname is NOT NULL
+UNION
+SELECT
+    {RR_TYPE_A} as type,
+    true as nxdomain,
+    NULL::varchar(255) as domainname,
+    mx_record.a_ttl as ttl,
+    NULL::varchar(255) as nsname,
+    NULL::varchar(255) as rname,
+    NULL::int as serial,
+    NULL::int as refresh,
+    NULL::int as retry,
+    NULL::int as expiry,
+    NULL::int as nxttl,
+    mx_record.hostname as hostname,
+    mx_record.ip_address as ip_address,
+    NULL::int as preference
 FROM
     mx_record
 WHERE

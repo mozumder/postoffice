@@ -235,9 +235,9 @@ async def Query(pool, data):
                         RCODE_response_code = 0
                     if record[0] == RR_TYPE_A or record[0] == RR_TYPE_AAAA:
                         RDATA = record[12].packed
-                        print(f' IP_Address={record[12]}')
+                        print(f' name={record[11]} IP_Address={record[12]}')
                         if query[0] == RR_TYPE_MX or query[0] == RR_TYPE_SRV:
-                            additional_results.append((record[0], record[3], record[2], RDATA))
+                            additional_results.append((record[0], record[3], record[11], RDATA))
                         elif record[11] != None:
                             answer_results.append((record[0], record[3], record[11], RDATA))
                         else:

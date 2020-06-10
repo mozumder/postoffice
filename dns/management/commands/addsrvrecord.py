@@ -95,8 +95,22 @@ _udp - UDP protocol""",
         except:
             raise CommandError('Domain not found. Exiting')
 
+        targetdomains = Domain.objects.raw("SELECT id, name FROM dns_domain WHERE '.' || %s LIKE '%%.' || dns_domain.name LIMIT 1", [options['target']])
+        if targetdomains:
+            hostname = options['target'][:len(options['target'])-len(targetdomains[0].name)-1]
+            h, h_created = Host.objects.get_or_create(domain=domain,name=hostname)
+        else:
+            h = None
+            h_created = None
+            
+        if h_created:
+            print(f'Created host {h} under domain {h.domain}.')
+        else:
+            print(f'Host {h} under domain {h.domain} already exists.')
+
         srv_record = SRV_Record.objects.create(
             domain=domain,searchdomain=domain.name,
+            host=h,
             name=name,
             searchname=searchname,
             ttl=options['ttl'],
