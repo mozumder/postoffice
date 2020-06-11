@@ -12,6 +12,7 @@ header_struct = bitstruct.compile(header_format)
 question_struct = bitstruct.compile(question_format)
 answer_struct = bitstruct.compile(answer_format)
 opt_struct = bitstruct.compile(opt_format)
+optanswer_struct = bitstruct.compile(optanswer_format)
 label_struct = bitstruct.compile(label_format)
 soa_struct = bitstruct.compile(soa_format)
 mx_struct = bitstruct.compile(mx_format)
@@ -36,20 +37,22 @@ async def Query(pool, data):
 #    hexdump.hexdump(data)
 #    print(f'HEADER: Starting byte 1')
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
-#    print(f'  {ID_message_id=}')
-#    print(f'  {QR_response=}')
-#    print(f'  {OPCODE_operation=} ({OPCODE[OPCODE_LOOKUP[OPCODE_operation]]})')
-#    print(f'  {AA_authoritative_answer=}')
-#    print(f'  {TC_truncation=}')
-#    print(f'  {RD_recursion_desired=}')
-#    print(f'  {RA_recursion_available=}')
-#    print(f'  {AD_authentic_data=}')
-#    print(f'  {CD_checking_disabled=}')
-#    print(f'  {RCODE_response_code=} ({RCODE[RCODE_LOOKUP[RCODE_response_code]]})')
-#    print(f'  {QDCOUNT_questions_count=}')
-#    print(f'  {ANCOUNT_answers_count=}')
-#    print(f'  {NSCOUNT_authoritative_answers_count=}')
-#    print(f'  {ARCOUNT_additional_records_count=}')
+    test = False
+    if test == True:
+        print(f'  {ID_message_id=}')
+        print(f'  {QR_response=}')
+        print(f'  {OPCODE_operation=} ({OPCODE[OPCODE_LOOKUP[OPCODE_operation]]})')
+        print(f'  {AA_authoritative_answer=}')
+        print(f'  {TC_truncation=}')
+        print(f'  {RD_recursion_desired=}')
+        print(f'  {RA_recursion_available=}')
+        print(f'  {AD_authentic_data=}')
+        print(f'  {CD_checking_disabled=}')
+        print(f'  {RCODE_response_code=} ({RCODE[RCODE_LOOKUP[RCODE_response_code]]})')
+        print(f'  {QDCOUNT_questions_count=}')
+        print(f'  {ANCOUNT_answers_count=}')
+        print(f'  {NSCOUNT_authoritative_answers_count=}')
+        print(f'  {ARCOUNT_additional_records_count=}')
     names = {}
     offset = 12
     question_label_list = []
@@ -66,127 +69,116 @@ async def Query(pool, data):
     additionals = []
     options = []
     dictionary = {}
-    if QR_response == False:
-        for c in range(QDCOUNT_questions_count):
-#            print(f'QUESTION NAME: Starting byte {offset+1}')
-            labels = []
-            namestart = offset
-            labeloffset = offset
-            while data[offset] != 0:
-                if data[offset] & 192 == 0:
-                    labels.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                    offset = offset + data[offset] + 1
-#            print(f'{labels=}')
-            names[namestart] = labels
-            for i in range(len(labels)):
-                dictionary[".".join(labels[i:len(labels)])] = labeloffset
-                labeloffset = labeloffset + len(labels[i]) + 1
-            offset = offset + 1
-#            print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
-            qtype, qclass = question_struct.unpack(data[offset:offset+4])
-            queries.append((qtype, qclass, data[namestart:offset], ".".join(labels)))
-            offset = offset + 4
-    else:
-        for c in range(ANCOUNT_answers_count):
-    #        print(f'ANSWER NAME: Starting byte {offset+1}')
-            answer_label_list = []
-            namestart = offset
-            while data[offset] != 0 or data[offset]:
-                if data[offset] & 192 == 0:
-                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                    offset = offset + data[offset] + 1
-            if data[offset] & 192 == 192:
-                answer_label_list = names[data[offset] & 63]
-            if answer_label_list:
-                names[namestart] = answer_label_list
-            offset = offset + 1
-    #        print(f'ANSWER TYPE & CLASS: Starting byte {offset+1}')
-            atype, aclass, attl, alength = answer_struct.unpack(data[offset:offset+10])
-            answers.append((answer_label_list, atype, aclass, attl, alength, data[offset+10:offset+10+alength]))
-            offset = offset + 10 + alength
-        for c in range(NSCOUNT_authoritative_answers_count):
-    #        print(f'AUTHORITY NAME: Starting byte {offset+1}')
-            authority_label_list = []
-            namestart = offset
-            while data[offset] != 0:
-                if data[offset] & 192 == 0:
-                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                    offset = offset + data[offset] + 1
-            if data[offset] & 192 == 192:
-                authority_label_list = names[data[offset] & 63]
-            if authority_label_list:
-                names[namestart] = authority_label_list
-            offset = offset + 1
-    #        print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
-            ntype, nclass, nttl, nlength = answer_struct.unpack(data[offset:offset+10])
-            authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
-            offset = offset + 10 + nlength
-        for c in range(ARCOUNT_additional_records_count):
-    #        print(f'ADDITIONAL NAME: Starting byte {offset+1}')
-            additional_label_list = []
-            namestart = offset
-            while data[offset] != 0:
-                if data[offset] & 192 == 0:
-                    label_list.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
-                    offset = offset + data[offset] + 1
-            if data[offset] & 192 == 192:
-                additional_label_list = names[data[offset] & 63]
-            if additional_label_list:
-                names[namestart] = additional_label_list
-            offset = offset + 1
-    #        print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
-            xtype, xclass, xttl, xlength = answer_struct.unpack(data[offset:offset+10])
-            additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
-            offset = offset + 10 + xlength
-
+    for c in range(QDCOUNT_questions_count):
+#        print(f'QUESTION NAME: Starting byte {offset+1}')
+        labels = []
+        namestart = offset
+        labeloffset = offset
+        while data[offset] != 0:
+            if data[offset] & 192 == 0:
+                labels.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                offset = offset + data[offset] + 1
+#        print(f'{labels=}')
+        names[namestart] = labels
+        for i in range(len(labels)):
+            dictionary[".".join(labels[i:len(labels)])] = labeloffset
+            labeloffset = labeloffset + len(labels[i]) + 1
+        offset = offset + 1
+#        print(f'QUESTION TYPE & CLASS: Starting byte {offset+1}')
+        qtype, qclass = question_struct.unpack(data[offset:offset+4])
+        queries.append((qtype, qclass, data[namestart:offset], ".".join(labels)))
+        offset = offset + 4
+    for c in range(NSCOUNT_authoritative_answers_count):
+#        print(f'AUTHORITY NAME: Starting byte {offset+1}')
+        labels = []
+        namestart = offset
+        labeloffset = offset
+        while data[offset] != 0:
+            if data[offset] & 192 == 0:
+                labels.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                offset = offset + data[offset] + 1
+#        print(f'{labels=}')
+        names[namestart] = labels
+        for i in range(len(labels)):
+            dictionary[".".join(labels[i:len(labels)])] = labeloffset
+            labeloffset = labeloffset + len(labels[i]) + 1
+        offset = offset + 1
+#        print(f'AUTHORITY TYPE & CLASS: Starting byte {offset+1}')
+        ntype, nclass, nttl, nlength = answer_struct.unpack(data[offset:offset+10])
+        authorities.append((authority_label_list, ntype, nclass, nttl, nlength, data[offset+10:offset+10+nlength]))
+        offset = offset + 10 + nlength
+    for c in range(ARCOUNT_additional_records_count):
+#        print(f'ADDITIONAL NAME: Starting byte {offset+1}')
+        labels = []
+        namestart = offset
+        labeloffset = offset
+        while data[offset] != 0:
+            if data[offset] & 192 == 0:
+                labels.append(data[offset+1:offset+1+data[offset]].decode("utf-8"))
+                offset = offset + data[offset] + 1
+#        print(f'{labels=}')
+        names[namestart] = labels
+        for i in range(len(labels)):
+            dictionary[".".join(labels[i:len(labels)])] = labeloffset
+            labeloffset = labeloffset + len(labels[i]) + 1
+        offset = offset + 1
+#        print(f'ADDITIONAL TYPE & CLASS: Starting byte {offset+1}')
+        xtype, xclass, xttl, xlength = answer_struct.unpack(data[offset:offset+10])
+        additionals.append((additional_label_list, xtype, xclass, xttl, data[offset+4:offset+8], xlength, data[offset+10:offset+10+xlength]))
+        offset = offset + 10 + xlength
     for record in additionals:
         if record[1] == 41:
 #            print(f'OPT EDNS')
             xrcode, EDNS_version, DO_DNSSEC_Answer_OK = opt_struct.unpack(record[4])
             OPT_XRCODE = xrcode << 4 | RCODE_response_code
             options.append((record[2],OPT_XRCODE,EDNS_version,DO_DNSSEC_Answer_OK,record[5],data))
-
-#    for record in queries:
-#        print(f'QUERY:')
-#        print(f'  label={record[2]}')
-#        print(f'  type={record[0]} ({RR_TYPE[RR_TYPE_LOOKUP[record[0]]]})')
-#        print(f'  class={record[1]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[1]]]})')
-#    for record in answers:
-#        print(f'ANSWER')
-#        print(f'  label={record[0]}')
-#        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-#        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
-#        print(f'  ttl={record[3]}')
-#        print(f'  data_length= {record[4]}')
-#    for record in authorities:
-#        print(f'AUTHORITY')
-#        print(f'  label={record[0]}')
-#        print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-#        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
-#        print(f'  ttl={record[3]}')
-#        print(f'  data_length= {record[4]}')
-#    for record in additionals:
-#        print(f'ADDITIONAL')
-#        print(f'  label={record[0]}')
-#        print(f'  type=={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
-#        print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
-#        print(f'  ttl={record[3]}')
-#        print(f'  data_length={record[6]}')
-#    for record in options:
-#        print(f'OPTIONS')
-#        print(f'  udp_payload_size={record[0]}')
-#        print(f'  OPT_XRCODE={record[1]}')
-#        print(f'  EDNS_version={record[2]}')
-#        print(f'  DO_DNSSEC_Answer_OK={record[3]}')
-#        print(f'  length={record[4]}')
+    if test == True:
+        for record in queries:
+            print(f'QUERY:')
+            print(f'  label={record[2]}')
+            print(f'  type={record[0]} ({RR_TYPE[RR_TYPE_LOOKUP[record[0]]]})')
+            print(f'  class={record[1]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[1]]]})')
+        for record in answers:
+            print(f'ANSWER')
+            print(f'  label={record[0]}')
+            print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+            print(f'  ttl={record[3]}')
+            print(f'  data_length= {record[4]}')
+        for record in authorities:
+            print(f'AUTHORITY')
+            print(f'  label={record[0]}')
+            print(f'  type={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+            print(f'  ttl={record[3]}')
+            print(f'  data_length= {record[4]}')
+        for record in additionals:
+            print(f'ADDITIONAL')
+            print(f'  label={record[0]}')
+            print(f'  type=={record[1]} ({RR_TYPE[RR_TYPE_LOOKUP[record[1]]]})')
+            print(f'  class={record[2]} ({DNS_CLASS[DNS_CLASS_LOOKUP[record[2]]]})')
+            print(f'  ttl={record[3]}')
+            print(f'  data_length={record[6]}')
+        for record in options:
+            print(f'OPTIONS')
+            print(f'  udp_payload_size={record[0]}')
+            print(f'  OPT_XRCODE={record[1]}')
+            print(f'  EDNS_version={record[2]}')
+            print(f'  DO_DNSSEC_Answer_OK={record[3]}')
+            print(f'  length={record[4]}')
     
-    # MARK: DB Lookup
-    tasks =  [db_lookup(pool,query) for query in queries]
+    # MARK: DNS Lookup
+    if QR_response == False:
+        if len(queries)>0:
+            data = await DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options)
+        else:
+            data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, 0, 0, 0, ARCOUNT_additional_records_count)
+    else:
+        RCODE_response_code = 4
+        data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, 0, 0, 0, ARCOUNT_additional_records_count)
+    return data
 
-    results = await asyncio.gather(*tasks)
-
-
-    # MARK: - Generate Response
+async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options):
     # TODO: Compress labels through referencing
     # TODO: Generate OPT Additional Response
     # TODO: Generate CNAME Resource Record
@@ -197,7 +189,11 @@ async def Query(pool, data):
     # TODO: Generate CAA Resource Record
     # TODO: Generate IXFR Resource Transfer
     # TODO: Generate TXFR Resource Transfer
-    
+
+    # MARK: - Lookup Database
+    tasks =  [db_lookup(pool,query) for query in queries]
+    results = await asyncio.gather(*tasks)
+
     question_results = []
     answer_results = []
     authority_results = []
@@ -283,9 +279,13 @@ async def Query(pool, data):
             question = query[2] + question_struct.pack(query[0], query[1])
             questions_data.append(question)
 
+    # MARK: - Generate Response
+
     ANCOUNT_answers_count = len(answer_results)
     NSCOUNT_authoritative_answers_count = len(authority_results)
     ARCOUNT_additional_records_count = len(additional_results)
+    if len(options) > 0:
+        ARCOUNT_additional_records_count += 1
     data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
     for question in questions_data:
         data = data + question
@@ -337,10 +337,16 @@ async def Query(pool, data):
             response = name + answer_struct.pack(record[0], DNS_CLASS_INTERNET, record[1], len(names) + 20) + names + record[5]
             offset = offset + 20
         data = data + response
+    if len(options) > 0:
+        data = data + add_OPT_data(options)
 
 #    hexdump.hexdump(data)
     return data
-
+def add_OPT_data(options):
+    for record in options:
+        data = optanswer_struct.pack(41, record[0], record[1] >> 4, record[2], record[3], 0)
+    return data
+    
 def decode_name(name, dictionary, offset):
     labels = name.split(".")
     encoded_name = b''

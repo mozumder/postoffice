@@ -120,8 +120,10 @@ class DNSTest(SimpleTestCase):
         """Test domain A record lookup. Should return succesful DNS lookup and
 additional authority data.
         """
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	A
 
@@ -140,8 +142,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_a_record_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.neT.			IN	A
 
@@ -159,8 +163,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_a_record(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;badexample.net.			IN	A
 """
@@ -171,8 +177,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_a_record_nodot(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;badexamplenet.			IN	A
 """
@@ -183,8 +191,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_a_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;www.example.net.		IN	A
 
@@ -202,8 +212,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_a_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.example.net.		IN	A
 
@@ -217,8 +229,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_soa_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;www.example.net.		IN	SOA
 
@@ -236,8 +250,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_soa_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	SOA
 
@@ -255,8 +271,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_soa_record_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.neT.			IN	SOA
 
@@ -274,8 +292,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_soa_record_cap(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;exampleneT.			IN	SOA
 """
@@ -286,8 +306,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_soa_record_negative_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.example.net.		IN	SOA
 
@@ -305,8 +327,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_soa_record(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;badexample.net.			IN	SOA
 """
@@ -317,8 +341,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_soa_record_negative_subdomain(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.badexample.net.		IN	SOA
 """
@@ -332,8 +358,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         """Test A record lookup for a subdomain with multiple IP addresses.
         Should return succesful DNS lookup with 2 answers and 2 authority data.
         """
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;cdn.example.net.		IN	A
 
@@ -352,8 +380,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_aaaa_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	AAAA
 
@@ -367,8 +397,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_aaaa_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;smtp.example.net.		IN	AAAA
 
@@ -386,8 +418,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_aaaa_record_subdomain_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;smtP.example.net.		IN	AAAA
 
@@ -405,8 +439,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_aaaa_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;www.example.net.		IN	AAAA
 
@@ -420,8 +456,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_negative_aaaa_record_negative_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.example.net.		IN	AAAA
 
@@ -435,8 +473,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_mx_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	MX
 
@@ -457,8 +497,10 @@ mail.example.net.	14400	IN	A	199.29.17.254
         self.assertIn(test, output)
 
     def test_mx_record_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.neT.			IN	MX
 
@@ -479,8 +521,10 @@ mail.example.net.	14400	IN	A	199.29.17.254
         self.assertIn(test, output)
 
     def test_negative_mx_record(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;badexample.net.			IN	MX
 """
@@ -491,8 +535,10 @@ mail.example.net.	14400	IN	A	199.29.17.254
         self.assertIn(test, output)
 
     def test_negative_mx_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;www.example.net.		IN	MX
 
@@ -506,8 +552,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_negative_mx_record_negative_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.example.net.		IN	MX
 
@@ -521,8 +569,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_ns_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	NS
 
@@ -537,8 +587,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_ns_record_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;examplE.neT.			IN	NS
 
@@ -553,8 +605,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_ns_record(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;badexample.net.			IN	NS
 """
@@ -565,8 +619,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_ns_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;www.example.net.		IN	NS
 
@@ -580,8 +636,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_ns_record_negative_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.example.net.		IN	NS
 
@@ -595,8 +653,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_txt_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	TXT
 
@@ -616,8 +676,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_txt_record_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;examplE.neT.			IN	TXT
 
@@ -637,8 +699,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_negative_txt_record(self):
-        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+        test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;badexample.net.			IN	TXT
 """
@@ -649,8 +713,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_txt_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;www.example.net.		IN	TXT
 
@@ -664,8 +730,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_negative_txt_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;wwww.example.net.		IN	TXT
 
@@ -679,8 +747,10 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         self.assertIn(test, output)
 
     def test_txt_record_subdomain_domainkey(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;2020060201._domainkey.example.net. IN	TXT
 
@@ -698,8 +768,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_txt_record_subdomain_dmarc(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;_dmarc.example.net.		IN	TXT
 
@@ -717,8 +789,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_cname_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;mail2.example.net.		IN	CNAME
 
@@ -736,8 +810,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_a_cname_record_subdomain(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;mail2.example.net.		IN	A
 
@@ -756,8 +832,10 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_caa_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;example.net.			IN	CAA
 
@@ -776,8 +854,10 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         self.assertIn(test, output)
 
     def test_srv_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;_imaps._tcp.example.net.	IN	SRV
 
@@ -798,8 +878,10 @@ mail.example.net.	14400	IN	A	199.29.17.254
         self.assertIn(test, output)
 
     def test_srv_record_cap(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;_imapS._tcP.examplE.neT.	IN	SRV
 
@@ -820,8 +902,10 @@ mail.example.net.	14400	IN	A	199.29.17.254
         self.assertIn(test, output)
 
     def test_negative_srv_record(self):
-        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+        test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
 ;; QUESTION SECTION:
 ;_tcp.example.net.		IN	SRV
 

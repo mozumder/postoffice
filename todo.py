@@ -1,5 +1,3 @@
-# TODO: Create testbench
-# TODO: OPT response
 # TODO: Recursive Lookups
 # TODO: Database triggers
 # TODO: Redis cache
@@ -9,4 +7,6 @@
 
 # DONE: Multiprocessing UDP
 # DONE: Label Compression
+# DONE: Create testbench
+# DONE: OPT response
 
