@@ -179,14 +179,6 @@ async def Query(pool, data):
     return data
 
 async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options):
-    # TODO: Compress labels through referencing
-    # TODO: Generate OPT Additional Response
-    # TODO: Generate CNAME Resource Record
-    # TODO: Generate MX Resource Record
-    # TODO: Generate SRV Resource Record
-    # TODO: Generate PTR Resource Record
-    # TODO: Generate AAAA Resource Record
-    # TODO: Generate CAA Resource Record
     # TODO: Generate IXFR Resource Transfer
     # TODO: Generate TXFR Resource Transfer
 
