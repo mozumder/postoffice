@@ -1,8 +1,10 @@
-# TODO: Recursive Lookups
-# TODO: Database triggers
 # TODO: Redis cache
+# TODO: Recursive Lookups
 # TODO: DNSSEC
+# TODO: Database triggers
 # TODO: Documentation
+# TODO: Admin views for CRUD
+# TODO: Setup management command
 # TODO: Extra RRs (HINFO, DNAME, etc..)
 
 # DONE: Multiprocessing UDP
