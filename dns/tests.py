@@ -116,6 +116,7 @@ class DNSTest(SimpleTestCase):
         cls.proc.kill()
         super().tearDownClass()
 
+    # MARK: test_a_record
     def test_a_record(self):
         """Test domain A record lookup. Should return succesful DNS lookup and
 additional authority data.
@@ -141,6 +142,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_a_record_cap
     def test_a_record_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -162,6 +164,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_a_record
     def test_negative_a_record(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -176,6 +179,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_a_record_nodot
     def test_negative_a_record_nodot(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -190,6 +194,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_a_record_subdomain
     def test_a_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -211,6 +216,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_a_record_subdomain
     def test_negative_a_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -228,6 +234,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_soa_record_subdomain
     def test_soa_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -249,6 +256,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_soa_record
     def test_soa_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -270,6 +278,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_soa_record_cap
     def test_soa_record_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -291,6 +300,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_soa_record_cap
     def test_negative_soa_record_cap(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -305,6 +315,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_soa_record_negative_subdomain
     def test_soa_record_negative_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -326,6 +337,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_soa_record
     def test_negative_soa_record(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -354,6 +366,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_redundant_a_record_subdomain
     def test_redundant_a_record_subdomain(self):
         """Test A record lookup for a subdomain with multiple IP addresses.
         Should return succesful DNS lookup with 2 answers and 2 authority data.
@@ -379,6 +392,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_aaaa_record
     def test_negative_aaaa_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -396,6 +410,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_aaaa_record_subdomain
     def test_aaaa_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -417,6 +432,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_aaaa_record_subdomain_cap
     def test_aaaa_record_subdomain_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -438,6 +454,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_aaaa_record_subdomain
     def test_negative_aaaa_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -455,6 +472,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_aaaa_record_negative_subdomain
     def test_negative_aaaa_record_negative_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -472,6 +490,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_mx_record
     def test_mx_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
@@ -496,6 +515,7 @@ mail.example.net.	14400	IN	A	199.29.17.254
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_mx_record_cap
     def test_mx_record_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
@@ -520,6 +540,7 @@ mail.example.net.	14400	IN	A	199.29.17.254
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_mx_record
     def test_negative_mx_record(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -534,6 +555,7 @@ mail.example.net.	14400	IN	A	199.29.17.254
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_mx_record_subdomain
     def test_negative_mx_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -551,6 +573,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_mx_record_negative_subdomain
     def test_negative_mx_record_negative_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -568,6 +591,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_ns_record
     def test_ns_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -586,6 +610,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_ns_record_cap
     def test_ns_record_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -604,6 +629,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_ns_record
     def test_negative_ns_record(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -618,6 +644,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_ns_record_subdomain
     def test_ns_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -635,6 +662,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_ns_record_negative_subdomain
     def test_ns_record_negative_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -652,6 +680,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_txt_record
     def test_txt_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -675,6 +704,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_txt_record_cap
     def test_txt_record_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 3, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -698,6 +728,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_txt_record
     def test_negative_txt_record(self):
         test=""";; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
 
@@ -712,6 +743,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_txt_record_subdomain
     def test_txt_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -729,6 +761,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_negative_txt_record_subdomain
     def test_negative_txt_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
@@ -746,6 +779,7 @@ example.net.		14400	IN	SOA	ns0.dnsprovider.com. dns.example.net. 0 43200 3600 24
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_txt_record_subdomain_domainkey
     def test_txt_record_subdomain_domainkey(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -767,6 +801,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_txt_record_subdomain_dmarc
     def test_txt_record_subdomain_dmarc(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -788,6 +823,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_cname_record_subdomain
     def test_cname_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -809,6 +845,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_a_cname_record_subdomain
     def test_a_cname_record_subdomain(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -831,6 +868,7 @@ example.net.		14400	IN	NS	ns0.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_caa_record
     def test_caa_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
 
@@ -853,6 +891,7 @@ example.net.		14400	IN	NS	ns1.dnsprovider.com.
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_srv_record
     def test_srv_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
@@ -877,6 +916,7 @@ mail.example.net.	14400	IN	A	199.29.17.254
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_srv_record_cap
     def test_srv_record_cap(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 2
 
@@ -901,6 +941,7 @@ mail.example.net.	14400	IN	A	199.29.17.254
         output = result.stdout.decode('utf-8')
         self.assertIn(test, output)
 
+    # MARK: test_srv_record_cap
     def test_negative_srv_record(self):
         test=""";; flags: qr aa rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
 
