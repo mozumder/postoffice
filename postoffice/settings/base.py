@@ -25,7 +25,7 @@ SECRET_KEY = config('SECRET_KEY',default='')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1', cast=Csv())
+ALLOWED_HOSTS = ['127.0.0.1','mail.mozumder.net','10.0.1.7'] 
 
 RECORD_TTL = config('RECORD_TTL', default=14400, cast=int)
 IP_PING_URL = config('IP_PING_URL', default=None)

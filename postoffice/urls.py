@@ -19,9 +19,10 @@ from django.conf import settings
 
 urlpatterns = [
     path('dns/', include('dns.urls')),
+    path('admin/', admin.site.urls),
 ]
 
 if settings.DEBUG == True:
     urlpatterns += [
-        path('admin/', admin.site.urls),
+#        path('admin/', admin.site.urls),
     ]
