@@ -6,47 +6,47 @@ from django.core.management.base import BaseCommand, CommandError
 from dns.models import Domain, A_Record
 
 class Command(BaseCommand):
-    help = ('Create a a host under a domain')
+    help = ("Create a a host under a domain")
 
     def add_arguments(self, parser):
         parser.add_argument(
             '--ttl',
             action='store',
             default=None,
-            help='Time-to-live',
+            help="Time-to-live",
             )
         parser.add_argument(
             '--ip',
             action='store',
             default=None,
-            help='IP Address',
+            help="IP Address",
             )
         parser.add_argument(
             '-dynamic','--dynamic_ip',
             action='store_true',
             dest='dynamic_ip',
             default=None,
-            help='Allow IP address updates with Dynamic DNS',
+            help="Allow IP address updates with Dynamic DNS",
             )
         parser.add_argument(
             '-static','--static_ip',
             action='store_false',
             dest='dynamic_ip',
             default=None,
-            help='Disallow IP address updates with Dynamic DNS',
+            help="Disallow IP address updates with Dynamic DNS",
             )
         parser.add_argument(
             '-a', '--all',
             action='store_true',
             default=False,
-            help='Update all A Records in a domain',
+            help="Update all A Records in a domain",
             )
         parser.add_argument(
             'domain',
             nargs='?',
             action='store',
             default=None,
-            help='Domain to update',
+            help="Domain to update",
             )
         parser.add_argument(
             'name',

@@ -1,3 +1,6 @@
+# The files in this directory are from the Django-Vmail package: https://github.com/lgunsch/django-vmail/tree/master/vmail
+# These are included here per license given under MIT License for that package.
+
 """
 Chpasswd command for existing mail users to change their password.
 """

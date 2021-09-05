@@ -30,9 +30,6 @@ ALLOWED_HOSTS = ['127.0.0.1','mail.mozumder.net','10.0.1.7']
 RECORD_TTL = config('RECORD_TTL', default=14400, cast=int)
 IP_PING_URL = config('IP_PING_URL', default=None)
 IP_PING_INTERVAL = config('IP_PING_INTERVAL', default=900, cast=int)
-DYNDNS_ENDPOINT = config('DYNDNS_ENDPOINT', default=None)
-DYNDNS_USERNAME = config('DYNDNS_USERNAME', default=None)
-
 
 # Application definition
 
@@ -48,6 +45,7 @@ INSTALLED_APPS = [
     'accounts',
     'rules',
     'dns',
+    'mail',
 ]
 
 MIDDLEWARE = [

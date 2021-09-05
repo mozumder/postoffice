@@ -6,22 +6,20 @@ from django.core.management.base import BaseCommand
 from dns.models import A_Record
 
 class Command(BaseCommand):
-    help = ('List all A Records and their owners')
+    help = ("List all A Records and their owners")
 
     def add_arguments(self, parser):
         parser.add_argument(
             '-d','--domain',
             action='store',
-            dest='domain',
             default=None,
-            help='Domain to list. Otherwise will show for all domains of a user',
+            help="Domain to list. Otherwise will show for all domains of a user",
             )
         parser.add_argument(
             '-u','--username',
             action='store',
-            dest='username',
             default=None,
-            help='Username of domain owner. Otherwise will show for all users',
+            help="Username of domain owner. Otherwise will show for all users",
             )
 
     def handle(self, *args, **options):

@@ -4,9 +4,11 @@ settings.ini
 local.env
 local.py
 *pyc
-scratch.*
+scratch*
 static/
 log/
 venv/
 postgres/
 redis/
+test.sh
+initialize.sh

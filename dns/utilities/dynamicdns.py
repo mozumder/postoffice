@@ -1,15 +1,14 @@
 import requests
 import logging
-
-from dns.models import A_Record, DynamicDNS, IPLog
+import django
+django.setup()
+from dns.models import A_Record, DynamicDNS, DynamicDNSAccount, IPLog
 
 logger = logging.getLogger("dns")
 
 class DynamicDNSManager:
     @staticmethod
-    def update(options):
-
-        ping_url = options['ping_url']
+    def update(ping_url):
         try:
             logger.debug(f"Pinging: {ping_url}")
             r = requests.get(url=ping_url, timeout=1)
@@ -35,28 +34,30 @@ class DynamicDNSManager:
         new_ip = r.text
         logger.debug(f"Received IP Address: {new_ip}")
         try:
-            current_ip = IPLog.objects.all()[0]
+            current_ip = IPLog.objects.all()[0].ip
         except IndexError:
             current_ip = None
-        
-        if current_ip == r.headers['ip']:
+        if current_ip == new_ip:
             return
 
-        dyndns = DynamicDNS.objects.all()
-        
-        for dyn in dyndns:
+        for dyn in DynamicDNS.objects.all():
             if new_ip != dyn.a_record.ip_address and dyn.a_record.dynamic_ip == True:
-                endpoint = options['dynamic_dns_update_endpoint']
-                username = options['dynamic_dns_update_username']
-                dns_update_payload = {
-                    'username':username,
-                    'password':dyn.password,
+                try:
+                    account = DynamicDNSAccount.objects.filter(domains=dyn.a_record.domain)[0]
+                except IndexError as e:
+                    logger.error(f"No Dynamic DNS Account found")
+                    raise e
+                endpoint = account.endpoint
+                password = dyn.password if dyn.password else account.password
+                payload = {
+                    'username':account.username,
+                    'password':password,
                     'id':dyn.dyndns_id,
                     'ip':new_ip,
                 }
                 try:
-                    logger.debug(f"Connecting to DNS Update URL: {endpoint} with payload {dns_update_payload}")
-                    dnsupdate = requests.post(url=endpoint, data=dns_update_payload, timeout=15)
+                    logger.debug(f"Connecting to DNS Update URL: {endpoint} with payload {payload}")
+                    dnsupdate = requests.post(url=endpoint, data=payload, timeout=15)
                 except requests.exceptions.ConnectionError:
                     logger.warning(f"Can't connect to Update DNS URL {endpoint}")
                     return 1
@@ -96,10 +97,10 @@ class DynamicDNSManager:
                     continue
                 elif dnsupdate.text == 'error-system':
                     logger.warning(f"Problem updating DNS record. General DNS server system error caught and recognized by the system.")
-                    continue
+                    return 1
                 elif dnsupdate.text == 'error':
                     logger.warning(f"Problem updating DNS record. General DNS server system error unrecognized by the system.")
-                    continue
+                    return 1
                     
                 elif dnsupdate.text == 'success':
                     a_record = dyn.a_record
@@ -109,6 +110,9 @@ class DynamicDNSManager:
                     continue
                 else:
                     logger.warning(f"Problem updating DNS record.")
-                    continue
-                
+                    return 1
+
+        NewIPLog = IPLog(ip=new_ip)
+        NewIPLog.save()
+
         return

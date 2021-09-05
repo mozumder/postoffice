@@ -4,10 +4,10 @@ Delete Host
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from dns.models import Host, Domain
+from dns.models import CNAME_Record, Domain
 
 class Command(BaseCommand):
-    help = ('Delete a host under a domain')
+    help = ("Delete an aliased host name under a domain. This deletes a CNAME record.")
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -15,21 +15,21 @@ class Command(BaseCommand):
             nargs='?',
             action='store',
             default=None,
-            help='Domain name that host is under',
+            help="Domain name that host is under",
             )
         parser.add_argument(
-            'host',
+            'alias',
             nargs='?',
             action='store',
             default=None,
-            help='Host name to be deleted',
+            help="Host name alias to be deleted",
             )
 
     def handle(self, *args, **options):
         if options['domain'] == None:
             raise CommandError("Need a Domain Name.")
-        if options['host'] == None:
-            raise CommandError("Need a Host Name.")
+        if options['alias'] == None:
+            raise CommandError("Need an Alias Name.")
 
         try:
             domain = Domain.objects.get(name=options['domain'])
@@ -37,10 +37,11 @@ class Command(BaseCommand):
             raise CommandError('Domain not found. Exiting')
 
         try:
-            host = Host.objects.get(domain=domain, name=options['host'])
+            cname = CNAME_Record.objects.get(domain=domain, name=options['alias'])
         except:
-            raise CommandError('Host not found. Exiting')
+            raise CommandError('CNAME Alias not found. Exiting')
 
-        print(f'Deleting host {host}')
-        host.delete()
+        print(f'Deleting CNAME alias {cname}')
+        cname.delete()
+
 

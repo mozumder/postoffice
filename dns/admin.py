@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 
-from .models import Domain, Host, A_Record, IPLog, DynamicDNS
+from .models import *
 # Register your models here.
 
 @admin.register(Domain)
@@ -42,6 +42,44 @@ class HostAdmin(admin.ModelAdmin):
     ]
     readonly_fields=('date_updated',)
 
+@admin.register(SOA_Record)
+class SOA_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'searchdomain', 'rname', 'nameserver', 'refresh', 'retry', 'expiry', 'nxttl', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('rname'),
+            ('nameserver'),
+            ('nameserver_host'),
+            ('refresh'),
+            ('retry'),
+            ('expiry'),
+            ('nxttl'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
 @admin.register(A_Record)
 class A_RecordAdmin(admin.ModelAdmin):
     def host(obj):
@@ -58,17 +96,308 @@ class A_RecordAdmin(admin.ModelAdmin):
         else:
             html = format_html("-")
         return html
-    list_display = ['__str__', 'name', domain, 'ip_address', 'ttl', 'dynamic_ip', 'date_updated']
+    list_display = ['__str__', domain, 'name', 'ip_address', 'ttl', 'roundrobin', 'dynamic_ip', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    list_editable = ['dynamic_ip',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('ip_address'),
+            ('dynamic_ip'),
+            ('roundrobin'),
+            ('host'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(AAAA_Record)
+class AAAA_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'ip_address', 'ttl', 'serial', 'date_updated']
     list_display_links = ['__str__',]
     search_fields = ['name']
     fieldsets = [
         (None, {'fields': [
+            ('domain', 'searchdomain'),
             ('name'),
+            ('searchname'),
             ('ip_address'),
-            ('dynamic_ip'),
             ('host'),
-            ('domain'),
             ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(CNAME_Record)
+class CNAME_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'canonical_name', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('canonical_name'),
+            ('host'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(MX_Record)
+class MX_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'host', 'preference', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('hostname'),
+            ('host'),
+            ('preference'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(TXT_Record)
+class TXT_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'value', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('value'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(PTR_Record)
+class PTR_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'hostname', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('hostname'),
+            ('host'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(NS_Record)
+class NS_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'delegate', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('delegate'),
+            ('delegate_host'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+@admin.register(SRV_Record)
+class SRV_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'priority', 'weight', 'port', 'target', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('priority'),
+            ('weight'),
+            ('port'),
+            ('target'),
+            ('host'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
+            ('date_updated'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
+
+@admin.register(CAA_Record)
+class CAA_RecordAdmin(admin.ModelAdmin):
+    def host(obj):
+        if obj.host:
+            url = reverse('admin:dns_host_change', args = [obj.host.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.host.host_name())
+        else:
+            html = format_html("-")
+        return html
+    def domain(obj):
+        if obj.domain:
+            url = reverse('admin:dns_domain_change', args = [obj.domain.id])
+            html = format_html("<a href='{}'>{}</a>", url, obj.domain.__str__())
+        else:
+            html = format_html("-")
+        return html
+    list_display = ['__str__', domain, 'name', 'type', 'issuer_critical', 'tag', 'value', 'ttl', 'serial', 'date_updated']
+    list_display_links = ['__str__',]
+    search_fields = ['name']
+    fieldsets = [
+        (None, {'fields': [
+            ('domain', 'searchdomain'),
+            ('name'),
+            ('searchname'),
+            ('type'),
+            ('issuer_critical'),
+            ('tag'),
+            ('value'),
+            ('ttl'),
+            ('serial'),
+            ('source'),
             ('date_updated'),
             ]
         }),
@@ -77,17 +406,35 @@ class A_RecordAdmin(admin.ModelAdmin):
 
 @admin.register(IPLog)
 class IPLogAdmin(admin.ModelAdmin):
-    list_display = ['date_updated','address',]
+    list_display = ['date_updated','ip',]
     list_display_links = ['date_updated',]
-    search_fields = ['address']
+    search_fields = ['ip']
     fieldsets = [
         (None, {'fields': [
-            ('id'),
-            ('date_updated','address'),
+            ('ip'),
+            ('date_updated'),
             ]
         }),
     ]
     readonly_fields=('date_updated',)
+
+@admin.register(DynamicDNSAccount)
+class DynamicDNSAccountAdmin(admin.ModelAdmin):
+    list_display = ['owner', 'username', 'password', 'endpoint', 'date_updated']
+    list_display_links = ['username',]
+    search_fields = ['username']
+    fieldsets = [
+        (None, {'fields': [
+            ('owner'),
+            ('username', 'password'),
+            ('endpoint'),
+            ('date_updated'),
+            ('domains'),
+            ]
+        }),
+    ]
+    readonly_fields=('date_updated',)
+
 
 @admin.register(DynamicDNS)
 class DynamicDNSAdmin(admin.ModelAdmin):
