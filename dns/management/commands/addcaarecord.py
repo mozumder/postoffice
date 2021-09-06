@@ -7,7 +7,7 @@ from django.conf import settings
 from dns.models import Host, Domain, CAA_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
-    help = ("Create redirect from one hose name to another. This is an alias name for a host, and creates a CNAME record")
+    help = ("Create redirect from one host name to another. This is an alias name for a host, and creates a CNAME record")
 
     def add_arguments(self, parser):
         parser.add_argument(

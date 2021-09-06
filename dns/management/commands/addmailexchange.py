@@ -7,7 +7,10 @@ from django.conf import settings
 from dns.models import Host, Domain, MX_Record, SOURCE_SCRIPT
 
 class Command(BaseCommand):
-    help = ("Create a mail exchange for a domain. This adds an MX record. When someone sends an email to a domain, they look up the the mail exchange hostname for the domain, and sends mail to port 25 on that mail exchange host.")
+    help = ("""Create a mail exchange for a domain. This adds an MX record.
+
+When someone sends an email to a domain, they look up the the mail exchange hostname for the domain, and sends mail to port 25 on that mail exchange host.
+""")
 
     def add_arguments(self, parser):
         parser.add_argument(

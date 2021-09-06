@@ -7,7 +7,7 @@ Currently Postoffice is a functional DNS origin server written in Python 3.8 and
     $ ./manage.py createdomain --email admin@example.com example.com 123.45.67.89 ns0.mynameservers.com ns1.mynameservers.com
     $ ./manage.py addhost example.com 123.45.67.89 www
     $ ./manage.py addhost -mx example.com 123.45.67.90 mail
-    $ ./manage.py rundnsserver --processes 4
+    $ sudo ./manage.py rundnsserver --processes 4
 
 It even includes a DNS-over-HTTP server under the url /dns/query?dns when you run the Django web server:
 
