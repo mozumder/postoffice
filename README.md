@@ -2,18 +2,18 @@
 
 Postoffice is planned to be a next-generation SMTP/IMAP mail server with a friendly user interface.
 
-Currently Postoffice is a functional DNS origin server written in Python 3.8 and Django using Postgres as the back-end database. You can administer it from the web interface or from the command line shell:
+Currently Postoffice is a functional DNS authoritative server written in Python 3.8 and Django using Postgres as the back-end database. You can administer it from the web interface or from the command line shell:
 
     $ ./manage.py createdomain --email admin@example.com example.com 123.45.67.89 ns0.mynameservers.com ns1.mynameservers.com
     $ ./manage.py addhost example.com 123.45.67.89 www
     $ ./manage.py addhost -mx example.com 123.45.67.90 mail
     $ sudo ./manage.py rundnsserver --processes 4
 
-It even includes a DNS-over-HTTP server under the url /dns/query?dns when you run the Django web server:
+It comes with an web admin interface at under /admin, which you can run with default Django web server:
 
     $ ./manage.py runserver
 
-To make this a DNS-over-HTTPS server, just run Django through a reverse proxy HTTPS server like h2o or Nginx with a WSGI interface.
+As a bonus, it even includes a DNS-over-HTTP server under the url /dns-query?dns when you run the Django web server. You can even make this a DNS-over-HTTPS server if you run the web server through a reverse proxy HTTPS server like h2o or Nginx with a WSGI interface.
 
 ## Installation
 
@@ -35,7 +35,7 @@ Then, install all the Python components, including Django, by running installing
 
     % pip install -r requirements.txt
 
-(Hint: use a Python virtualenvironment so you don't clobber the base python instlalation)
+(Hint: use a Python virtual environment so you don't clobber the base python instlalation)
 
 Inside this directory, create a .env vile with some basic information to run Django:
 
@@ -77,6 +77,8 @@ Then you can add individual hosts to that domain:
     $ ./manage.py addhost -mx example.com 123.45.67.90 mail
 
 You can configure all sorts of things for your domain, incuding adding TXT and other domain name records.
+
+Of coure, all these configuration capabilities are available under the admin web interface as well.
 
 Finally you would run the DNS server for your domain by logging into your dns server machine that has access to the install directory and starting the DNS server:
 
@@ -142,6 +144,6 @@ You can find help on each individual command with:
 
 Postoffice is in the concept prototype phase, so use at your own risk. The database and interfaces are continuously redesigned. 
 
-As of now Postoffice is not a DNS edge server with a recursive resolver. You wouldn't use it for your personal computer's DNS server. Instead, Postoffice is an origin server. You would use it when you register a domain name, and you want the rest of the world to find all the hosts for your domain.  Eventually this will also be an edge server, as well as adding security through DNSSEC and other fun features, but right now it's specifically a basic origin server.
+As of now Postoffice is not a DNS resolving server with a recursive resolver. You wouldn't use it for your personal computer's DNS server. Instead, Postoffice is an authoritative server. You would use it when you register a domain name, and you want the rest of the world to find all the hosts for your domain.  Eventually this will also be an edge recursive resolving server, as well as adding security through DNSSEC and other fun features, but right now it's specifically a basic authoritative server.
 
 Ultimately, this project will include an IMAP/SMTP mail server to replace the incredibly complicated Dovecot and Postfix, which is why I started this project and named Postoffice. The DNS server is only the first step to get things going. But that's a long-term goal.
