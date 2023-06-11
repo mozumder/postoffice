@@ -19,8 +19,11 @@ from django.conf import settings
 admin.site.site_header = "Postoffice Administration"
 admin.site.site_title = "Postoffice Admin Portal"
 admin.site.index_title = "Welcome to Postoffice Admin Portal!"
+from dns.views import dns_query
+
 
 urlpatterns = [
+    path('dns-query', dns_query.as_view(), name='query_dns'),
     path('dns/', include('dns.urls')),
     path('admin/', admin.site.urls),
 ]
