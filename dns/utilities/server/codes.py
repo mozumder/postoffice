@@ -8,6 +8,8 @@ mx_format = '>u16u16u32u16u16'
 caa_flags_format = '>b1p7'
 srv_format = '>u16u16u32u16u16u16u16'
 optanswer_format = '>p8u16u16u8u8b1p15u16'
+tcp_length_format = '>u16'
+ip_address_format = '>u8u8u8u8'
 
 OPCODE_QUERY=0
 OPCODE_IQUERY=1
