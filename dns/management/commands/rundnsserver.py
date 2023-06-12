@@ -35,6 +35,11 @@ class Command(BaseCommand):
             action='store_true',
             default=False,
             help="Run with test database.")
+        parser.add_argument(
+            '-d', '--debug',
+            action='store_true',
+            default=False,
+            help="Turn on debug messages.")
 
     def handle(self, *args, **options):
         if options['ip_address'] == None:
@@ -42,4 +47,4 @@ class Command(BaseCommand):
         if options['port'] == None:
             raise CommandError("Need a port.")
 
-        LaunchDNSServer(options['ip_address'], options['port'], options['processes'], options['test_mode'])
+        LaunchDNSServer(options['ip_address'], options['port'], options['processes'], options['test_mode'], options['debug'])
