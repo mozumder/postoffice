@@ -458,7 +458,7 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
-                    print(f"{record[0]=} {record[1]=} ")
+                    # print(f"{record[0]=} {record[1]=} ")
                     if record[1] == True:
                         RCODE_response_code = RCODE_NOERROR
                     else:
