@@ -8,7 +8,7 @@ from .query import Query
 from .db import DBConnectInit
 import hexdump
 
-def worker(receive_queue, send_queue, dsn, tcp,):
+def worker(receive_queue, send_queue, dsn, tcp, debug):
 #    print(multiprocessing.current_process())
     loop = asyncio.get_event_loop()
     id = receive_queue.get()
@@ -17,11 +17,11 @@ def worker(receive_queue, send_queue, dsn, tcp,):
 #        print(f'{id} worker receiving')
         data = receive_queue.get()
 #        print(f'Process {id} received message with length {len(data)}')
-        response = loop.run_until_complete(Query(db_pool, data, tcp))
+        response = loop.run_until_complete(Query(db_pool, data, tcp, debug))
         send_queue.put(response)
 
 class DNSProtocol(asyncio.Protocol):
-    def __init__(self, dsn, processes=1, name="Default"):
+    def __init__(self, dsn, processes=1, name="Default", debug=False):
         self.protocol_name = name
         pool = Pool(processes=processes)
         m = Manager()
@@ -34,7 +34,7 @@ class DNSProtocol(asyncio.Protocol):
             tcp = True
         else:
             tcp = False
-        workers = [pool.apply_async(worker, (self.send_queue, self.receive_queue, dsn, tcp)) for i in range(processes)]
+        workers = [pool.apply_async(worker, (self.send_queue, self.receive_queue, dsn, tcp, debug)) for i in range(processes)]
 #        print(f"{name} DNSProtocol Object Initialized")
 #        print(f'created {len(workers)} workers for {name} DNSProtocol')
         super().__init__()

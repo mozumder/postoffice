@@ -21,7 +21,7 @@ srv_struct = bitstruct.compile(srv_format)
 tcp_length_struct = bitstruct.compile(tcp_length_format)
 ip_address_struct = bitstruct.compile(ip_address_format)
 
-async def Query(pool, data, tcp=False):
+async def Query(pool, data, tcp=False, debug=False):
 #        message = data.decode()
 
     # MARK: Header
@@ -45,7 +45,6 @@ async def Query(pool, data, tcp=False):
 
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
 
-    debug = True
     if debug == True:
         hexdump.hexdump(data)
         print(f'HEADER: Starting byte 1')
