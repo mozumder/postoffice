@@ -12,17 +12,23 @@ def worker(receive_queue, send_queue, dsn, tcp, debug):
 #    print(multiprocessing.current_process())
     loop = asyncio.get_event_loop()
     id = receive_queue.get()
+    if tcp:
+        protocol_name = "TCP"
+    else:
+        protocol_name = "UDP"
+    print(f'{protocol_name} worker {id} started') if debug else None
     db_pool = loop.run_until_complete(asyncpg.create_pool(dsn,init=DBConnectInit))
     while True:
-#        print(f'{id} worker receiving')
+        print(f'{protocol_name} worker {id} receiving') if debug else None
         data = receive_queue.get()
-#        print(f'Process {id} received message with length {len(data)}')
+        print(f'{protocol_name} worker {id} received message with length {len(data)}') if debug else None
         response = loop.run_until_complete(Query(db_pool, data, tcp, debug))
         send_queue.put(response)
 
 class DNSProtocol(asyncio.Protocol):
     def __init__(self, dsn, processes=1, name="Default", debug=False):
         self.protocol_name = name
+        self.debug = debug
         pool = Pool(processes=processes)
         m = Manager()
         self.send_queue = m.Queue()
@@ -50,8 +56,7 @@ class DNSProtocol(asyncio.Protocol):
             print("Error. Connection closed.")
 
     def datagram_received(self, data, addr):
-#        print(f'Got datagram from {addr} with length {len(data)}')
-#        self.queue.put("Hello")
+        print(f'Got datagram from {addr} with length {len(data)}') if self.debug else None
         self.send_queue.put(data)
 #        print(f'Awaiting data back')
         return_data = self.receive_queue.get()
@@ -60,7 +65,7 @@ class DNSProtocol(asyncio.Protocol):
         self.transport.sendto(return_data, addr)
 
     def data_received(self, data):
-#        print(f'Got data with length {len(data)}')
+        print(f'Got data from {addr} with length {len(data)}') if self.debug else None
         self.send_queue.put(data)
 #        print(f'Awaiting data back')
         return_data = self.receive_queue.get()
