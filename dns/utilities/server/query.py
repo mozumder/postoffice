@@ -46,9 +46,10 @@ async def Query(pool, data, tcp=False, debug=False):
     ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(data)
 
     if debug == True:
+        print(f'Received data')
+        print(f'-------------')
         hexdump.hexdump(data)
-        print(f'HEADER: Starting byte 1')
-        print(f'data:')
+        print(f'HEADER:')
         print(f'  {TCP_length=}')
         print(f'  {ID_message_id=}')
         print(f'  {QR_response=}')
@@ -206,11 +207,13 @@ async def Query(pool, data, tcp=False, debug=False):
 
     # Analyze return data
     if debug == True:
+        print(f'Returned data')
+        print(f'-------------')
         hexdump.hexdump(return_data)
         ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(return_data)
         TCP_length = 0
         offset = 12
-        print(f'return_data:')
+        print(f'HEADER:')
         print(f'  {TCP_length=}')
         print(f'  {ID_message_id=}')
         print(f'  {QR_response=}')
@@ -445,17 +448,21 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
             if len(results) > 0:
                 if len(results[0]) > 0:
                     AA_authoritative_answer = True if results[0][0][3] != None else False
-        RCODE_response_code = 0
+        RCODE_response_code = RCODE_NXDOMAIN
         for i in range(len(queries)):
             query = queries[i]
             if results[0] == -1:
-                RCODE_response_code = 4
+                RCODE_response_code = RCODE_NOTIMP
             elif len(results) > 0:
+                RCODE_response_code = RCODE_NOTAUTH
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
+                    print(f"{record[0]=} {record[1]=} ")
                     if record[1] == True:
-                        RCODE_response_code = 0
+                        RCODE_response_code = RCODE_NOERROR
+                    else:
+                        RCODE_response_code = RCODE_NXDOMAIN
                     if record[0] == RR_TYPE_A or record[0] == RR_TYPE_AAAA:
                         RDATA = record[12].packed
 #                        print(f' name={record[11]} IP_Address={record[12]}')
