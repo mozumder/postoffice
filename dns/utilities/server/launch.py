@@ -2,13 +2,74 @@ import asyncio
 from django.conf import settings
 import asyncpg
 
-from .protocol import MultiprocessorDNSServer, DNSServer
+from .protocol import DNSProtocol
+from .db import DBConnectInit
 
-def LaunchDNSServer(ip_address='127.0.0.1', port=53, processes=1, test_mode=False):
+# Echo handler for TCP connections
+async def handle_tcp_client(reader, writer):
+    print("handling tcp client")
     while True:
-        asyncio.run(UDPListener(ip_address, port, processes,test_mode),)
+        data = await reader.read(1024)
+        if not data:
+            break
+        writer.write(data)
+        await writer.drain()
+    writer.close()
 
-async def UDPListener(ip_address='127.0.0.1', port=53, processes=1, test_mode=False):
+async def TCPListener(db_pool, host='127.0.0.1', port=53, processes=1, test_mode=False):
+    print(f'Starting TCP server on port {port}')
+    proto = DNSProtocol(db_pool, processes, "TCP")
+    while True:
+        # Create a new event loop for each iteration
+        loop = asyncio.get_event_loop()
+
+        # Create and start the server
+        server = await loop.create_server(
+                    lambda: proto, host, port, reuse_port=True)
+#        print(f'Server started and listening on port {port}')
+
+        # Wait for an hour
+        await asyncio.sleep(3600)
+
+        # Close the server
+        server.close()
+        await server.wait_closed()
+
+        print('Server closed.')
+
+
+async def UDPListener(db_pool, host='127.0.0.1', port=53, processes=1, test_mode=False):
+    print(f'Starting UDP server on port {port}')
+    # Get a reference to the event loop as we plan to use
+    # low-level APIs.
+    loop = asyncio.get_running_loop()
+
+    # One protocol instance will be created to serve all
+    # client requests.
+    transport, protocol = await loop.create_datagram_endpoint(
+        lambda: DNSProtocol(db_pool,processes,"UDP"),
+        local_addr=(host, port), reuse_port=True)
+
+# Function to stop the servers
+def stop_servers(tcp_task, udp_task):
+    tcp_task.cancel()
+    udp_task.cancel()
+
+async def Launcher(db_pool, host='127.0.0.1', port=53, processes=1, test_mode=False):
+    while True:
+#        print("starting udp task")
+        udp_task = asyncio.create_task(UDPListener(db_pool, host, port, processes, test_mode))
+#        print("starting tcp task")
+        tcp_task = asyncio.create_task(TCPListener(db_pool, host, port, processes, test_mode))
+
+#        print("waiting 1 hour")
+        await asyncio.sleep(3600)  # Wait for 1 hour
+        stop_servers(tcp_task, udp_task)
+        print("stopped servers")
+
+#asyncio.run(main(ip_address, port, processes,test_mode))
+
+def LaunchDNSServer(host='127.0.0.1', port=53, processes=1, test_mode=False):
     if test_mode:
         db_name = 'test_'+settings.DATABASES['default']['NAME']
     else:
@@ -18,23 +79,4 @@ async def UDPListener(ip_address='127.0.0.1', port=53, processes=1, test_mode=Fa
     db_host = settings.DATABASES['default']['HOST']
     db_port = settings.DATABASES['default']['PORT']
     dsn = f'postgres://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-
-    # Get a reference to the event loop as we plan to use
-    # low-level APIs.
-    loop = asyncio.get_running_loop()
-
-    # One protocol instance will be created to serve all
-    # client requests.
-    if processes > 1:
-        transport, protocol = await loop.create_datagram_endpoint(
-            lambda: MultiprocessorDNSServer(dsn,processes),
-            local_addr=(ip_address, port))
-    else:
-        transport, protocol = await loop.create_datagram_endpoint(
-            lambda: DNSServer(dsn,processes),
-            local_addr=(ip_address, port))
-
-    try:
-        await asyncio.sleep(3600)  # Serve for 1 hour.
-    finally:
-        transport.close()
+    asyncio.run(Launcher(dsn, host, port, processes, test_mode),)
