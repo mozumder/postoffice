@@ -438,7 +438,7 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
     QDCOUNT_questions_count = len(results)
     NSCOUNT_authoritative_answers_count = 0
     ARCOUNT_additional_records_count = 0
-    RA_recursion_available = True
+    RA_recursion_available = False
     AD_authentic_data = False
     AA_authoritative_answer  = False
     if OPCODE_operation == OPCODE_QUERY:
@@ -454,7 +454,7 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
             if results[0] == -1:
                 RCODE_response_code = RCODE_NOTIMP
             elif len(results) > 0:
-                RCODE_response_code = RCODE_NOTAUTH
+                RCODE_response_code = RCODE_REFUSED
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
