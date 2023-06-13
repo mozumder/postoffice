@@ -24,18 +24,24 @@ async def TCPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=Fal
         loop = asyncio.get_event_loop()
 
         # Create and start the server
-        server = await loop.create_server(
+        try:
+            server = await loop.create_server(
                     lambda: proto, host, port, reuse_port=True)
+        except Exception as e:
+            print(f"ERROR; {e}")
 #        print(f'Server started and listening on port {port}')
 
         # Wait for an hour
-        await asyncio.sleep(3600)
+        try:
+            await asyncio.sleep(3600)
+        except Exception as e:
+            print(f"ERROR; {e}")
 
         # Close the server
         server.close()
         await server.wait_closed()
 
-        print('Server closed.')
+        print('Server restarting.')
 
 
 async def UDPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
@@ -46,9 +52,12 @@ async def UDPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=Fal
 
     # One protocol instance will be created to serve all
     # client requests.
-    transport, protocol = await loop.create_datagram_endpoint(
-        lambda: DNSProtocol(db_pool,processes,"UDP", debug),
-        local_addr=(host, port), reuse_port=True)
+    try:
+        transport, protocol = await loop.create_datagram_endpoint(
+            lambda: DNSProtocol(db_pool,processes,"UDP", debug),
+            local_addr=(host, port), reuse_port=True)
+    except Exception as e:
+        print(f"ERROR; {e}")
 
 # Function to stop the servers
 def stop_servers(tcp_task, udp_task):
@@ -65,7 +74,13 @@ async def Launcher(db_pool, host='127.0.0.1', port=53, processes=1, debug=False)
 #        print("waiting 1 hour")
         await asyncio.sleep(3600)  # Wait for 1 hour
         stop_servers(tcp_task, udp_task)
-        print("stopped servers")
+        try:
+            await asyncio.gather(tcp_task, udp_task)
+        except asyncio.CancelledError:
+            pass
+        except Exception as e:
+            print(f"ERROR; {e}")
+        print("Restarting servers")
 
 #asyncio.run(main(ip_address, port, processes,test_mode))
 

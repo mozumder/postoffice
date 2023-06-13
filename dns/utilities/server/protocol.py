@@ -8,28 +8,37 @@ from .query import Query
 from .db import DBConnectInit
 import hexdump
 
-def worker(receive_queue, send_queue, dsn, tcp, debug):
-#    print(multiprocessing.current_process())
+async def worker(id, receive_queue, send_queue, protocol_name, dsn, tcp, debug):
     loop = asyncio.get_event_loop()
+    async with asyncpg.create_pool(dsn,init=DBConnectInit) as db_pool:
+        while True:
+            print(f'  {protocol_name} worker {id} receiving') if debug else None
+            data = receive_queue.get()
+            print(f'  {protocol_name} worker {id} received message with length {len(data)}') if debug else None
+            response = await Query(db_pool, data, tcp, debug)
+            send_queue.put(response)
+
+def worker_launcher(msg):
+    receive_queue, send_queue, dsn, tcp, debug = msg
+    print(f'WORKER {current_process()=}') if debug==True else None
     id = receive_queue.get()
-    if tcp:
+    if tcp==True:
         protocol_name = "TCP"
     else:
         protocol_name = "UDP"
-    print(f'{protocol_name} worker {id} started') if debug else None
-    db_pool = loop.run_until_complete(asyncpg.create_pool(dsn,init=DBConnectInit))
-    while True:
-        print(f'{protocol_name} worker {id} receiving') if debug else None
-        data = receive_queue.get()
-        print(f'{protocol_name} worker {id} received message with length {len(data)}') if debug else None
-        response = loop.run_until_complete(Query(db_pool, data, tcp, debug))
-        send_queue.put(response)
+    print(f'  {protocol_name} worker {id} started') if debug==True else None
+    try:
+        asyncio.run(worker(id, receive_queue, send_queue, protocol_name, dsn, tcp, debug))
+    except Exception as e:
+        print(e)
+
+#    raise Exception('some kind of error')
 
 class DNSProtocol(asyncio.Protocol):
     def __init__(self, dsn, processes=1, name="Default", debug=False):
         self.protocol_name = name
         self.debug = debug
-        pool = Pool(processes=processes)
+        self.process_pool = Pool(processes=processes)
         m = Manager()
         self.send_queue = m.Queue()
         for i in range(processes):
@@ -40,9 +49,12 @@ class DNSProtocol(asyncio.Protocol):
             tcp = True
         else:
             tcp = False
-        workers = [pool.apply_async(worker, (self.send_queue, self.receive_queue, dsn, tcp, debug)) for i in range(processes)]
-#        print(f"{name} DNSProtocol Object Initialized")
-#        print(f'created {len(workers)} workers for {name} DNSProtocol')
+        try:
+#            results = [self.process_pool.apply_async(worker, (self.send_queue, self.receive_queue, dsn, tcp, debug)) for i in range(processes)]
+            self.workers = self.process_pool.imap(worker_launcher, [[self.send_queue, self.receive_queue, dsn, tcp, debug]]*processes)
+        except Exception as e:
+            print(f"ERROR during worker creation: {e}")
+        print(f"{name} DNSProtocol Object Initialized") if self.debug else None
         super().__init__()
     
     def connection_made(self, transport):
@@ -65,7 +77,7 @@ class DNSProtocol(asyncio.Protocol):
         self.transport.sendto(return_data, addr)
 
     def data_received(self, data):
-        print(f'Got data from {addr} with length {len(data)}') if self.debug else None
+        print(f'Got data from with length {len(data)}') if self.debug else None
         self.send_queue.put(data)
 #        print(f'Awaiting data back')
         return_data = self.receive_queue.get()

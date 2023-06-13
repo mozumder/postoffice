@@ -438,7 +438,7 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
     QDCOUNT_questions_count = len(results)
     NSCOUNT_authoritative_answers_count = 0
     ARCOUNT_additional_records_count = 0
-    RA_recursion_available = False
+    RA_recursion_available = True
     AD_authentic_data = False
     AA_authoritative_answer  = False
     if OPCODE_operation == OPCODE_QUERY:
@@ -448,7 +448,10 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
             if len(results) > 0:
                 if len(results[0]) > 0:
                     AA_authoritative_answer = True if results[0][0][3] != None else False
-        RCODE_response_code = RCODE_NXDOMAIN
+        if AA_authoritative_answer == True:
+            RCODE_response_code = RCODE_NOERROR
+        else:
+            RCODE_response_code = RCODE_NXDOMAIN
         for i in range(len(queries)):
             query = queries[i]
             if results[0] == -1:
@@ -459,10 +462,7 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
                 for r in range(len(results[i])):
                     record = results[i][r]
                     # print(f"{record[0]=} {record[1]=} ")
-                    if record[1] == True:
-                        RCODE_response_code = RCODE_NOERROR
-                    else:
-                        RCODE_response_code = RCODE_NXDOMAIN
+                    RCODE_response_code = RCODE_NOERROR
                     if record[0] == RR_TYPE_A or record[0] == RR_TYPE_AAAA:
                         RDATA = record[12].packed
 #                        print(f' name={record[11]} IP_Address={record[12]}')
