@@ -198,7 +198,7 @@ async def Query(pool, data, tcp=False, debug=False):
     if QR_response == False:
         if len(queries)>0:
             # Querying DB
-            return_data = await DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options)
+            return_data = await DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options, debug)
         else:
             return_data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, 0, 0, 0, ARCOUNT_additional_records_count)
     else:
@@ -416,7 +416,7 @@ async def Query(pool, data, tcp=False, debug=False):
         return_data = tcp_length_struct.pack(len(return_data))+return_data
     return return_data
 
-async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options):
+async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options, debug):
     # TODO: Generate IXFR Resource Transfer
     # TODO: Generate TXFR Resource Transfer
 
@@ -448,23 +448,25 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
             if len(results) > 0:
                 if len(results[0]) > 0:
                     AA_authoritative_answer = True if results[0][0][3] != None else False
+        print(f"  {len(queries)} database entries searched") if debug==True else None
         for i in range(len(queries)):
             query = queries[i]
             if results[0] == -1:
                 RCODE_response_code = RCODE_NOTIMP
             elif len(results) > 0:
+                print(f"  {len(results[i])} database results found for query {i}") if debug==True else None
                 RCODE_response_code = RCODE_REFUSED
                 answer_label = label_struct.pack(offset)
                 for r in range(len(results[i])):
                     record = results[i][r]
-                    # print(f"{record[0]=} {record[1]=} ")
+                    print(f"  RR_TYPE: {record[0]} ({RR_TYPE[RR_TYPE_LOOKUP[record[0]]]}) NXDOMAIN: {not record[1]} ") if debug==True else None
                     if record[1] == True:
                         RCODE_response_code = RCODE_NOERROR
                     else:
                         RCODE_response_code = RCODE_NXDOMAIN
                     if record[0] == RR_TYPE_A or record[0] == RR_TYPE_AAAA:
                         RDATA = record[12].packed
-#                        print(f' name={record[11]} IP_Address={record[12]}')
+                        print(f'   CNAME: {record[11]} IP_Address={record[12]}') if debug==True else None
                         if query[0] == RR_TYPE_MX or query[0] == RR_TYPE_SRV:
                             additional_results.append((record[0], record[3], record[11], RDATA))
                         elif record[11] != None:
@@ -472,36 +474,37 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
                         else:
                             answer_results.append((record[0], record[3], query[3], RDATA))
                     elif record[0] == RR_TYPE_CNAME:
-#                        print(f'  CNAME Name={record[11]}')
+                        print(f'   CNAME: Name={record[11]}') if debug==True else None
                         answer_results.append((record[0], record[3], query[3], record[11]))
                     elif record[0] == RR_TYPE_PTR:
-#                        print(f'  PTR Name={record[11]}')
+                        print(f'   PTR: Hostname={record[11]}') if debug==True else None
                         answer_results.append((record[0], record[3], query[3], record[11]))
                     elif record[0] == RR_TYPE_CAA:
-#                        print(f'  CAA Tag={record[12]} Value={record[11]}')
+                        print(f'   CAA: Tag={record[12]} Value={record[11]}') if debug==True else None
                         rdata = caa_flags_struct.pack(record[13])
                         rdata = rdata + len(record[12]).to_bytes(1, byteorder='big') + bytes(record[12], 'utf-8') + bytes(record[11], 'utf-8')
                         answer_results.append((record[0], record[3], query[3], rdata))
                     elif record[0] == RR_TYPE_TXT:
-#                        print(f'  TXT Name={record[11]}')
+                        print(f'   TXT: Value={record[11]}') if debug==True else None
                         string = b''
                         strings = [record[11][i:i+255] for i in range(0, len(record[11]), 255)]
                         for label in strings:
                             string = string + len(label).to_bytes(1, byteorder='big') + bytes(label, 'utf-8')
                         answer_results.append((record[0], record[3], query[3], string))
                     elif record[0] == RR_TYPE_SRV:
-#                        print(f'  SRV Name={record[11]}')
+                        print(f'   SRV: Target={record[11]}') if debug==True else None
                         answer_results.append((record[0], record[3], query[3], record[11], record[13], record[14], record[15]))
                     elif record[0] == RR_TYPE_MX:
-#                        print(f'  MX Host={record[11]}')
+                        print(f'   MX: Hostname={record[11]}') if debug==True else None
                         answer_results.append((record[0], record[3], query[3], record[11], record[13]))
                     elif record[0] == RR_TYPE_NS:
+                        print(f'   NS: Hostname={record[11]} IP_Address={record[12]}') if debug==True else None
                         if query[0] == RR_TYPE_NS:
                             answer_results.append((record[0], record[3], record[2], record[4]))
                         else:
                             authority_results.append((record[0], record[3], record[2], record[4]))
                     elif record[0] == RR_TYPE_SOA:
-#                        print(f'  SOA Domain={record[2]} NS={record[4]} Mailbox={record[5]}')
+                        print(f'   SOA: Domain={record[2]} NS={record[4]} Mailbox={record[5]}') if debug==True else None
                         mbox = record[5].replace('@','.')
                         info = soa_struct.pack(record[6],record[7],record[8],record[9],record[10])
                         if query[0] == RR_TYPE_SOA:
