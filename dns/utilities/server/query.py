@@ -438,7 +438,7 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
     QDCOUNT_questions_count = len(results)
     NSCOUNT_authoritative_answers_count = 0
     ARCOUNT_additional_records_count = 0
-    RA_recursion_available = True
+    RA_recursion_available = False
     AD_authentic_data = False
     AA_authoritative_answer  = False
     if OPCODE_operation == OPCODE_QUERY:
@@ -448,10 +448,6 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
             if len(results) > 0:
                 if len(results[0]) > 0:
                     AA_authoritative_answer = True if results[0][0][3] != None else False
-        if AA_authoritative_answer == True:
-            RCODE_response_code = RCODE_NOERROR
-        else:
-            RCODE_response_code = RCODE_NXDOMAIN
         for i in range(len(queries)):
             query = queries[i]
             if results[0] == -1:
@@ -462,7 +458,10 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
                 for r in range(len(results[i])):
                     record = results[i][r]
                     # print(f"{record[0]=} {record[1]=} ")
-                    RCODE_response_code = RCODE_NOERROR
+                    if record[1] == True:
+                        RCODE_response_code = RCODE_NOERROR
+                    else:
+                        RCODE_response_code = RCODE_NXDOMAIN
                     if record[0] == RR_TYPE_A or record[0] == RR_TYPE_AAAA:
                         RDATA = record[12].packed
 #                        print(f' name={record[11]} IP_Address={record[12]}')
@@ -518,6 +517,14 @@ async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, 
     ANCOUNT_answers_count = len(answer_results)
     NSCOUNT_authoritative_answers_count = len(authority_results)
     ARCOUNT_additional_records_count = len(additional_results)
+#    print(f'{QDCOUNT_questions_count=}')
+#    print(f'{ANCOUNT_answers_count=}')
+#    print(f'{ARCOUNT_additional_records_count=}')
+#    print(f'{NSCOUNT_authoritative_answers_count=}')
+#    print(f'{AA_authoritative_answer=}')
+    if NSCOUNT_authoritative_answers_count == 0:
+        RCODE_response_code = RCODE_NOTAUTH
+
     if len(options) > 0:
         ARCOUNT_additional_records_count += 1
     data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count)
