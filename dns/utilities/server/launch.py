@@ -19,29 +19,37 @@ async def handle_tcp_client(reader, writer):
 async def TCPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
     print(f'Starting TCP server on port {port}')
     proto = DNSProtocol(db_pool, processes, "TCP", debug)
-    while True:
-        # Create a new event loop for each iteration
-        loop = asyncio.get_event_loop()
+    # Create a new event loop for each iteration
+    loop = asyncio.get_event_loop()
 
-        # Create and start the server
-        try:
-            server = await loop.create_server(
-                    lambda: proto, host, port, reuse_port=True)
-        except Exception as e:
-            print(f"ERROR; {e}")
-#        print(f'Server started and listening on port {port}')
+    # Create and start the server
+    try:
+        server = await loop.create_server(
+                lambda: proto, host, port, reuse_port=True)
+    except asyncio.CancelledError as e:
+        print(f'TCP server creation received request to cancel with: {e}')
+        raise asyncio.CancelledError("bad")
+    except Exception as e:
+        print(f"ERROR Creating TCP server: {e}")
+    print(f'TCP Server {server} started and listening on port {port}')
 
-        # Wait for an hour
-        try:
-            await asyncio.sleep(3600)
-        except Exception as e:
-            print(f"ERROR; {e}")
-
-        # Close the server
+    # Wait for an hour
+    try:
+        await asyncio.sleep(12)
+    except asyncio.CancelledError as e:
+        print(f'TCP Listener Received request to cancel with: {e}')
         server.close()
-        await server.wait_closed()
+#            raise asyncio.CancelledError("TCP cancelled")
+    except Exception as e:
+        print(f"ERROR Running TCP server: {e}")
+    finally:
+        server.close()
 
-        print('Server restarting.')
+    # Close the server
+    print(f'Waiting for TCP Listener to close')
+    await server.wait_closed()
+
+    print('TCP Listener closed.')
 
 
 async def UDPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
@@ -56,13 +64,33 @@ async def UDPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=Fal
         transport, protocol = await loop.create_datagram_endpoint(
             lambda: DNSProtocol(db_pool,processes,"UDP", debug),
             local_addr=(host, port), reuse_port=True)
+    except asyncio.CancelledError as e:
+        print(f'UDP Datagram endpoint creation received request to cancel with: {e}')
+        raise asyncio.CancelledError("bad")
     except Exception as e:
-        print(f"ERROR; {e}")
+        print(f"ERROR creating UDP datagram endpoint: {e}")
+
+    print(f'UDP datagram endpoint {transport} with protocol {protocol} started and listening on port {port}')
+
+    # Wait for some tme
+    try:
+        await asyncio.sleep(12)
+    except asyncio.CancelledError as e:
+        print(f'UDP Listener Received request to cancel with: {e}')
+        transport.close()
+#            raise asyncio.CancelledError("UDP cancelled")
+    except Exception as e:
+        print(f"ERROR Running TCP server: {e}")
+
+    print('UDP Listener closed.')
+
 
 # Function to stop the servers
 def stop_servers(tcp_task, udp_task):
-    tcp_task.cancel()
-    udp_task.cancel()
+    print("stopping servers")
+    tcp_task.cancel('Stop TCP Right Now')
+    udp_task.cancel('Stop UDP Right Now')
+    print("servers stopped")
 
 async def Launcher(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
     while True:
@@ -71,15 +99,18 @@ async def Launcher(db_pool, host='127.0.0.1', port=53, processes=1, debug=False)
 #        print("starting tcp task")
         tcp_task = asyncio.create_task(TCPListener(db_pool, host, port, processes, debug))
 
-#        print("waiting 1 hour")
-        await asyncio.sleep(3600)  # Wait for 1 hour
+        print("waiting some time before canceling both tasks")
+        await asyncio.sleep(4)  # Wait for 1 hour
         stop_servers(tcp_task, udp_task)
         try:
+            print('Finishing servers')
             await asyncio.gather(tcp_task, udp_task)
-        except asyncio.CancelledError:
-            pass
+            print('Servers finished')
+        except asyncio.CancelledError as e:
+            print(f'Received request to cancel with: {e}')
+            raise e
         except Exception as e:
-            print(f"ERROR; {e}")
+            print(f"ERROR running tasks: {e}")
         print("Restarting servers")
 
 #asyncio.run(main(ip_address, port, processes,test_mode))

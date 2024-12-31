@@ -31,6 +31,12 @@ class Command(BaseCommand):
             default=1,
             help="Number of concurrent processes to run")
         parser.add_argument(
+            '-thr', '--threads',
+            action='store',
+            type=int,
+            default=1,
+            help="Number of threads per processes")
+        parser.add_argument(
             '-t', '--test_mode',
             action='store_true',
             default=False,

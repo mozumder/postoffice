@@ -7,30 +7,34 @@ from .query import Query
 #header_format = '!H2B4H'
 from .db import DBConnectInit
 import hexdump
+import traceback
 
 async def worker(id, receive_queue, send_queue, protocol_name, dsn, tcp, debug):
     loop = asyncio.get_event_loop()
-    async with asyncpg.create_pool(dsn,init=DBConnectInit) as db_pool:
+    print(f"    - creating database pool for {protocol_name} worker {id}")
+    async with asyncpg.create_pool(dsn,min_size=2, max_size=2, init=DBConnectInit) as db_pool:
+        print(f"    - created database pool for {protocol_name} worker {id}")
         while True:
-            print(f'  {protocol_name} worker {id} receiving') if debug else None
+            print(f'  - {protocol_name} worker {id} receiving') if debug else None
             data = receive_queue.get()
-            print(f'  {protocol_name} worker {id} received message with length {len(data)}') if debug else None
+            print(f'  - {protocol_name} worker {id} received message with length {len(data)}') if debug else None
             response = await Query(db_pool, data, tcp, debug)
             send_queue.put(response)
 
 def worker_launcher(msg):
     receive_queue, send_queue, dsn, tcp, debug = msg
-    print(f'WORKER {current_process()=}') if debug==True else None
     id = receive_queue.get()
     if tcp==True:
         protocol_name = "TCP"
     else:
         protocol_name = "UDP"
-    print(f'  {protocol_name} worker {id} started') if debug==True else None
+    cur_process = current_process()
+    print(f'  - {protocol_name} worker {id} for process {cur_process.name} (pid={cur_process.pid}) starting') if debug==True else None
     try:
         asyncio.run(worker(id, receive_queue, send_queue, protocol_name, dsn, tcp, debug))
     except Exception as e:
-        print(e)
+        print(f"ERROR running {protocol_name} worker {id}: {e}")
+        print(traceback.format_exc())
 
 #    raise Exception('some kind of error')
 
@@ -54,7 +58,8 @@ class DNSProtocol(asyncio.Protocol):
             self.workers = self.process_pool.imap(worker_launcher, [[self.send_queue, self.receive_queue, dsn, tcp, debug]]*processes)
         except Exception as e:
             print(f"ERROR during worker creation: {e}")
-        print(f"{name} DNSProtocol Object Initialized") if self.debug else None
+
+        print(f"{name} DNSProtocol Object Initialized") 
         super().__init__()
     
     def connection_made(self, transport):
@@ -63,9 +68,13 @@ class DNSProtocol(asyncio.Protocol):
 
     def connection_lost(self, exc):
         if exc == None:
-            print("Connection closed.")
+            print("  - Connection closed.")
         else:
-            print("Error. Connection closed.")
+            print(f"Error. Connection closed with exception {e}.")
+        self.process_pool.terminate()
+        print(f"  - DNSProtocol Process pool terminated")
+        self.process_pool.join()
+        print(f"  - DNSProtocol Process pool joined")
 
     def datagram_received(self, data, addr):
         print(f'Got datagram from {addr} with length {len(data)}') if self.debug else None

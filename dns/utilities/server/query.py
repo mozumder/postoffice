@@ -418,7 +418,6 @@ async def Query(pool, data, tcp=False, debug=False):
 
 async def DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options, debug):
     # TODO: Generate IXFR Resource Transfer
-    # TODO: Generate TXFR Resource Transfer
 
     # MARK: - Lookup Database
     tasks =  [db_lookup(pool,query) for query in queries]
