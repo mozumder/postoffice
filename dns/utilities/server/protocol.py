@@ -74,10 +74,9 @@ async def handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue):
     writer.close()
 
 class DNSProtocol(asyncio.Protocol):
-    def __init__(self, send_queue, receive_queue, control_queue):
+    def __init__(self, send_queue, receive_queue):
         self.send_queue = send_queue
         self.receive_queue = receive_queue
-        self.control_queue = control_queue
         self.loop = asyncio.get_event_loop()
         logger.debug(f"DNSProtocol Object Initialized") 
     
@@ -93,10 +92,17 @@ class DNSProtocol(asyncio.Protocol):
         # echo back the message, but 2 seconds later
         logger.debug(data)
         logger.debug(f'Querying database')
-        await self.control_queue.put("stop")
-        await self.receive_queue.put(data)
+        try:
+            await self.receive_queue.put(data)
+        except Exception:
+            traceback.print_exc()
+
         logger.debug(f'Awaiting data back')
-        return_data = await self.send_queue.get()
+        try:
+            return_data = await self.send_queue.get()
+        except Exception:
+            traceback.print_exc()
+
         logger.debug(f'Got return data with length {len(return_data)}')
 #        hexdump.hexdump(return_data)
         self.transport.sendto(return_data, addr)

@@ -59,7 +59,7 @@ async def dns_main(*args, **options):
 
             # Create UDP server
             udp_transport, _ = await loop.create_datagram_endpoint(
-                lambda: DNSProtocol(udp_send_queue, udp_receive_queue, control_queue), local_addr=(ip_address, port))
+                lambda: DNSProtocol(udp_send_queue, udp_receive_queue), local_addr=(ip_address, port))
 
             logger.debug(f"TCP server listening on {ip_address}:{port}")
             logger.debug(f"UDP server listening on {ip_address}:{port}")                
