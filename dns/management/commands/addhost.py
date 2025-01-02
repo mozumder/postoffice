@@ -36,8 +36,20 @@ class Command(BaseCommand):
             type=int,
             help="Priority level for email server. Highest priority is 0.",
             )
+        parser.add_argument(
+            '-dyn', '--dynamic_ip',
+            action='store_true',
+            default=False,
+            help="Host address is a dynamic",
+            )
 
-
+        parser.add_argument(
+            'domain',
+            nargs='?',
+            action='store',
+            default=None,
+            help="Domain",
+            )
         parser.add_argument(
             'ip_address',
             nargs='?',

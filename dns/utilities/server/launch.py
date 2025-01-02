@@ -1,130 +1,70 @@
 import asyncio
+import logging
+import uuid
+
 from django.conf import settings
-import asyncpg
+from aiomultiprocess import Pool
 
-from .protocol import DNSProtocol
-from .db import DBConnectInit
+from .protocol import worker_launcher, DNSProtocol, handle_dns_query
 
-# Echo handler for TCP connections
-async def handle_tcp_client(reader, writer):
-    print("handling tcp client")
-    while True:
-        data = await reader.read(1024)
-        if not data:
-            break
-        writer.write(data)
-        await writer.drain()
-    writer.close()
+logger = logging.getLogger("dnsserver")
 
-async def TCPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
-    print(f'Starting TCP server on port {port}')
-    proto = DNSProtocol(db_pool, processes, "TCP", debug)
-    # Create a new event loop for each iteration
-    loop = asyncio.get_event_loop()
+async def dns_main(*args, **options):
+    logger.info("Running DNS server")
 
-    # Create and start the server
-    try:
-        server = await loop.create_server(
-                lambda: proto, host, port, reuse_port=True)
-    except asyncio.CancelledError as e:
-        print(f'TCP server creation received request to cancel with: {e}')
-        raise asyncio.CancelledError("bad")
-    except Exception as e:
-        print(f"ERROR Creating TCP server: {e}")
-    print(f'TCP Server {server} started and listening on port {port}')
+    ip_address = options['ip_address']
+    port = options['port']
+    if options['debug'] == True:
+        logger.info('Turning on debug messages')
+        loglevel = logging.DEBUG
+    else:
+        loglevel = logging.INFO
+    logger.setLevel(loglevel)
 
-    # Wait for an hour
-    try:
-        await asyncio.sleep(12)
-    except asyncio.CancelledError as e:
-        print(f'TCP Listener Received request to cancel with: {e}')
-        server.close()
-#            raise asyncio.CancelledError("TCP cancelled")
-    except Exception as e:
-        print(f"ERROR Running TCP server: {e}")
-    finally:
-        server.close()
-
-    # Close the server
-    print(f'Waiting for TCP Listener to close')
-    await server.wait_closed()
-
-    print('TCP Listener closed.')
-
-
-async def UDPListener(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
-    print(f'Starting UDP server on port {port}')
-    # Get a reference to the event loop as we plan to use
-    # low-level APIs.
-    loop = asyncio.get_running_loop()
-
-    # One protocol instance will be created to serve all
-    # client requests.
-    try:
-        transport, protocol = await loop.create_datagram_endpoint(
-            lambda: DNSProtocol(db_pool,processes,"UDP", debug),
-            local_addr=(host, port), reuse_port=True)
-    except asyncio.CancelledError as e:
-        print(f'UDP Datagram endpoint creation received request to cancel with: {e}')
-        raise asyncio.CancelledError("bad")
-    except Exception as e:
-        print(f"ERROR creating UDP datagram endpoint: {e}")
-
-    print(f'UDP datagram endpoint {transport} with protocol {protocol} started and listening on port {port}')
-
-    # Wait for some tme
-    try:
-        await asyncio.sleep(12)
-    except asyncio.CancelledError as e:
-        print(f'UDP Listener Received request to cancel with: {e}')
-        transport.close()
-#            raise asyncio.CancelledError("UDP cancelled")
-    except Exception as e:
-        print(f"ERROR Running TCP server: {e}")
-
-    print('UDP Listener closed.')
-
-
-# Function to stop the servers
-def stop_servers(tcp_task, udp_task):
-    print("stopping servers")
-    tcp_task.cancel('Stop TCP Right Now')
-    udp_task.cancel('Stop UDP Right Now')
-    print("servers stopped")
-
-async def Launcher(db_pool, host='127.0.0.1', port=53, processes=1, debug=False):
-    while True:
-#        print("starting udp task")
-        udp_task = asyncio.create_task(UDPListener(db_pool, host, port, processes, debug))
-#        print("starting tcp task")
-        tcp_task = asyncio.create_task(TCPListener(db_pool, host, port, processes, debug))
-
-        print("waiting some time before canceling both tasks")
-        await asyncio.sleep(4)  # Wait for 1 hour
-        stop_servers(tcp_task, udp_task)
-        try:
-            print('Finishing servers')
-            await asyncio.gather(tcp_task, udp_task)
-            print('Servers finished')
-        except asyncio.CancelledError as e:
-            print(f'Received request to cancel with: {e}')
-            raise e
-        except Exception as e:
-            print(f"ERROR running tasks: {e}")
-        print("Restarting servers")
-
-#asyncio.run(main(ip_address, port, processes,test_mode))
-
-def LaunchDNSServer(host='127.0.0.1', port=53, processes=1, test_mode=False, debug=False, ):
-    if test_mode == True:
+    if options['test_mode'] == True:
         db_name = 'test_'+settings.DATABASES['default']['NAME']
     else:
         db_name = settings.DATABASES['default']['NAME']
-    if debug == True:
-        print('Turning on debug messages')
     db_user = settings.DATABASES['default']['USER']
     db_password = settings.DATABASES['default']['PASSWORD']
     db_host = settings.DATABASES['default']['HOST']
     db_port = settings.DATABASES['default']['PORT']
     dsn = f'postgres://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-    asyncio.run(Launcher(dsn, host, port, processes, debug),)
+
+    control_queue = asyncio.Queue()
+    status_queue = asyncio.Queue()
+    tcp_send_queue = asyncio.Queue()
+    tcp_receive_queue = asyncio.Queue()
+    udp_send_queue = asyncio.Queue()
+    udp_receive_queue = asyncio.Queue()
+    loop = asyncio.get_event_loop()
+
+    processes = options['processes']
+    async with Pool() as multiproc_pool:
+        while True:
+            tasks = []
+
+            for i in range(processes):
+                id = uuid.uuid4()
+                opts = [id, control_queue, status_queue, udp_receive_queue, udp_send_queue, tcp_receive_queue, tcp_send_queue, dsn, loglevel]
+                tasks.append(multiproc_pool.apply(worker_launcher, [opts])) 
+#                tasks.append(multiproc_pool.apply(put_message, [udp_receive_queue,'Test']))
+            logger.debug(f'tasks = {len(tasks)}')
+            all_workers = asyncio.gather(*tasks)
+            logger.debug(all_workers)
+#            await udp_receive_queue.put(b'P\x94\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
+            # Create TCP server
+            tcp_server = await asyncio.start_server(
+                lambda reader, writer: handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue), ip_address, port)
+
+            # Create UDP server
+            udp_transport, _ = await loop.create_datagram_endpoint(
+                lambda: DNSProtocol(udp_send_queue, udp_receive_queue, control_queue), local_addr=(ip_address, port))
+
+            logger.debug(f"TCP server listening on {ip_address}:{port}")
+            logger.debug(f"UDP server listening on {ip_address}:{port}")                
+            await asyncio.sleep(3600)
+            udp_transport.close()
+            tcp_server.close()
+            for i in range(len(tasks)):
+                await control_queue.put("stop")

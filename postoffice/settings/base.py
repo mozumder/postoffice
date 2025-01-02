@@ -96,8 +96,8 @@ DATABASES = {
 
 CACHES = {
     'default': {
-         'BACKEND': 'redis_cache.RedisCache',
-         'LOCATION': config('CACHE_LOCATION',default='/var/run/redis/redis.sock'),
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        'LOCATION': config('CACHE_LOCATION',default='/var/run/redis/redis.sock'),
     }
 }
 
@@ -260,10 +260,10 @@ LOGGING = {
             'level': config('DJANGO_DB_LOG_LEVEL', default='DEBUG' if DEBUG else 'INFO'),
             'propagate': True,
         },
-        'dns': {
+        'dnsserver': {
             'handlers': ['console', 'dns'],
             'level': config('DJANGO_DNS_LOG_LEVEL', default='DEBUG'),
-            'propagate': True,
+            'propagate': False,
         },
         'django.db.backends': {
             'handlers': ['database'],

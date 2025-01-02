@@ -17,7 +17,7 @@ As a bonus, it even includes a DNS-over-HTTP server under the url /dns-query?dns
 
 ## Installation
 
-First, download and install Postgresql. Instructions for that are platform-specific and outside of the scope of this document, so please visit [https://www.postgresql.org/download/](https://www.postgresql.org/download/ "Postgresql")  to download for your platform.
+First, download and install Postgresql. Instructions for that are platform-specific and outside of the scope of this document, so please visit [https://www.postgresql.org/download/](https://www.postgresql.org/download/ "Postgresql") to download for your platform.
 
 Once you have Postgresql installed and running, create a Postgresql user as well as a database for Postoffice. This can be done with Postgresql's psql command shell by logging in as a Postgres administrator:
 
@@ -98,7 +98,7 @@ To actualy serve DNS requests from the world, tell your DNS registrar the IP add
 
 The web interface to edit the database can be run with the standard Django web server::
 
-    % ./manage.py runesrver
+    % ./manage.py runserver
 
 And the database can be accessed under http://localhost/admin
 
