@@ -15,27 +15,30 @@ async def worker(id, tcp, receive_queue, send_queue, db_pool):
         type = "TCP"
     else:
         type = "UDP"
-    try:
-        logger.debug(f'{type} worker {id} receiving messages') 
-        logger.debug(f'receive is empty: {receive_queue.empty()}  qsize: {receive_queue.qsize()}') 
-        logger.debug(f'send is empty: {send_queue.empty()}  qsize: {send_queue.qsize()}') 
-        data = await receive_queue.get()
-        logger.debug(f'{type} worker {id} received message with length {len(data)}')
+    while True:
         try:
-            print('here 1')
-            response = await Query(db_pool, data, tcp)
-            print('here 2')
+            logger.debug(f'{type} worker {id} receiving messages') 
+            logger.debug(f'receive is empty: {receive_queue.empty()}  qsize: {receive_queue.qsize()}') 
+            logger.debug(f'send is empty: {send_queue.empty()}  qsize: {send_queue.qsize()}') 
+            data = await receive_queue.get()
+            logger.debug(f'{type} worker {id} received message with length {len(data)}')
+            try:
+                logger.debug('here 1')
+                response = await Query(db_pool, data, tcp, True)
+                logger.debug('here 2')
+            except Empty:
+                pass
+            except Exception:
+                traceback.print_exc()
+            finally:
+                logger.debug(f'{type} worker {id} received database response with length {len(response)}')
+                await send_queue.put(response)
+        except asyncio.CancelledError as e:
+            logger.debug(f"Stopping {type} task {id}")
+        except Empty:
+            pass
         except Exception:
             traceback.print_exc()
-        finally:
-            logger.debug(f'{type} worker {id} received database response with length {len(response)}')
-            await send_queue.put(response)
-    except asyncio.CancelledError as e:
-        logger.debug(f"Stopping {type} task {id}")
-    except Empty:
-        pass
-    except Exception:
-        traceback.print_exc()
 
 async def task_monitor(monitored_task, control_queue, id):
     while True:
@@ -63,6 +66,7 @@ async def handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue):
         data = await reader.read(1024)
         if not data:
             break
+        logger.debug(data)
         logger.debug(f'Got TCP data with length {len(data)}')
         await tcp_send_queue.put(data)
         logger.debug(f'Awaiting data back')

@@ -197,7 +197,7 @@ async def Query(pool, data, tcp=False, debug=False):
     # MARK: DNS Lookup
     if QR_response == False:
         if len(queries)>0:
-            # Querying DB
+            print(f"Querying DB")
             return_data = await DNSLookup(pool, queries, dictionary, ID_message_id, OPCODE_operation, TC_truncation, RD_recursion_desired, CD_checking_disabled, options, debug)
         else:
             return_data = header_struct.pack(ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, 0, 0, 0, ARCOUNT_additional_records_count)

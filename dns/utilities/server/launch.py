@@ -40,19 +40,25 @@ async def dns_main(*args, **options):
     loop = asyncio.get_event_loop()
 
     processes = options['processes']
-    async with Pool() as multiproc_pool:
+    async with Pool() as pool:
         while True:
-            tasks = []
 
-            for i in range(processes):
-                id = uuid.uuid4()
-                opts = [id, control_queue, status_queue, udp_receive_queue, udp_send_queue, tcp_receive_queue, tcp_send_queue, dsn, loglevel]
-                tasks.append(multiproc_pool.apply(worker_launcher, [opts])) 
-#                tasks.append(multiproc_pool.apply(put_message, [udp_receive_queue,'Test']))
-            logger.debug(f'tasks = {len(tasks)}')
-            all_workers = asyncio.gather(*tasks)
-            logger.debug(all_workers)
-#            await udp_receive_queue.put(b'P\x94\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
+            results = asyncio.gather(*[ 
+                pool.apply(
+                    worker_launcher,
+                    [[
+                        uuid.uuid4(), 
+                        control_queue, 
+                        status_queue, 
+                        udp_receive_queue, 
+                        udp_send_queue, 
+                        tcp_receive_queue, 
+                        tcp_send_queue, 
+                        dsn, 
+                        loglevel
+                    ]]) for i in range(processes)])
+#            await tcp_receive_queue.put(b'\x00,[?\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x03www\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
+#            await udp_receive_queue.put(b'C\xce\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x03www\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
             # Create TCP server
             tcp_server = await asyncio.start_server(
                 lambda reader, writer: handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue), ip_address, port)
@@ -63,8 +69,11 @@ async def dns_main(*args, **options):
 
             logger.debug(f"TCP server listening on {ip_address}:{port}")
             logger.debug(f"UDP server listening on {ip_address}:{port}")                
-            await asyncio.sleep(3600)
-            udp_transport.close()
-            tcp_server.close()
-            for i in range(len(tasks)):
-                await control_queue.put("stop")
+
+            try:
+                await asyncio.sleep(4)
+            finally:
+                udp_transport.close()
+                tcp_server.close()
+                for i in range(processes):
+                    await control_queue.put("stop")
