@@ -1,26 +1,30 @@
+import os
 import asyncio
-import logging
-import asyncpg
 from queue import Empty
-from .query import Query
-#header_format = '!H2B4H'
-from .db import DBConnectInit
-import hexdump
+import logging
 import traceback
 
+import hexdump
+import asyncudp
+import asyncpg
+
+from .query import Query
+from .db import DBConnectInit
+
+#header_format = '!H2B4H'
 logger = logging.getLogger("dnsserver")
 
 async def worker(id, tcp, receive_queue, send_queue, db_pool):
+    logger.debug(f'{type} worker {id} receiving messages') 
     if tcp == True:
         type = "TCP"
     else:
         type = "UDP"
     while True:
         try:
-            logger.debug(f'{type} worker {id} receiving messages') 
             logger.debug(f'receive is empty: {receive_queue.empty()}  qsize: {receive_queue.qsize()}') 
             logger.debug(f'send is empty: {send_queue.empty()}  qsize: {send_queue.qsize()}') 
-            data = await receive_queue.get()
+            data = receive_queue.get()
             logger.debug(f'{type} worker {id} received message with length {len(data)}')
             try:
                 logger.debug('here 1')
@@ -32,32 +36,58 @@ async def worker(id, tcp, receive_queue, send_queue, db_pool):
                 traceback.print_exc()
             finally:
                 logger.debug(f'{type} worker {id} received database response with length {len(response)}')
-                await send_queue.put(response)
+                send_queue.put(response)
         except asyncio.CancelledError as e:
             logger.debug(f"Stopping {type} task {id}")
+            raise
         except Empty:
             pass
         except Exception:
             traceback.print_exc()
 
-async def task_monitor(monitored_task, control_queue, id):
+async def task_monitor(tcp_worker_task, udp_worker_task, control_queue, status_queue, id):
+    logger.debug(f"Monitoring worker {id}")
     while True:
-        control = await control_queue.get()
-        if control == "stop":
-            monitored_task.cancel()
-            break
+        msg = control_queue.get()
+        if msg == "stop":
+            logger.debug(f"got stop msg to cancel worker {id}")
+            udp_worker_task.cancel()
+            logger.debug(f"canceling udp_worker_task")
+            try:
+                await udp_worker_task
+            except asyncio.CancelledError:
+                logger.debug(f"canceled udp_worker_task {id}")
+
+            tcp_worker_task.cancel()
+            logger.debug(f"canceling tcp_worker_task")
+            try:
+                await tcp_worker_task
+            except asyncio.CancelledError:
+                logger.debug(f"canceled tcp_worker_task {id}")
+
+            status_queue.put(f'stopped {id}')
+        else:
+            logger.debug(f"weird msg {msg}")
+
+async def worker_task_launcher(id, control_queue, status_queue, udp_receive_queue, udp_send_queue, tcp_receive_queue, tcp_send_queue, dsn, loglevel):
+    logger.debug(f'Waiting for control msg')
+    async with asyncpg.create_pool(dsn,min_size=2, max_size=2, init=DBConnectInit) as db_pool:
+        async with asyncio.TaskGroup() as tg:
+            tcp_worker_task = tg.create_task(worker(id, True, tcp_receive_queue, tcp_send_queue, db_pool))
+            udp_worker_task = tg.create_task(worker(id, False, udp_receive_queue, udp_send_queue, db_pool))
+            monitor_task = tg.create_task(task_monitor(tcp_worker_task, udp_worker_task, control_queue, status_queue, id))
 
 async def worker_launcher(msg):
     id, control_queue, status_queue, udp_receive_queue, udp_send_queue, tcp_receive_queue, tcp_send_queue, dsn, loglevel = msg
     logger.setLevel(loglevel)
-    logger.debug(f'Process {id} launched')
+    pid = os.getpid()
+    logger.debug(f'Process {pid} started')
     async with asyncpg.create_pool(dsn,min_size=2, max_size=2, init=DBConnectInit) as db_pool:
-        tcp_worker_task = asyncio.create_task(worker(id, True, tcp_receive_queue, tcp_send_queue, db_pool))
-        udp_worker_task = asyncio.create_task(worker(id, False, udp_receive_queue, udp_send_queue, db_pool))
-        tcp_monitor_task = asyncio.create_task(task_monitor(tcp_worker_task, control_queue, id))
-        udp_monitor_task = asyncio.create_task(task_monitor(udp_worker_task, control_queue, id))
-        result = await asyncio.gather(tcp_worker_task,udp_worker_task,tcp_monitor_task,udp_monitor_task)
-
+        async with asyncio.TaskGroup() as tg:
+            tcp_worker_task = tg.create_task(worker(id, True, tcp_receive_queue, tcp_send_queue, db_pool))
+            udp_worker_task = tg.create_task(worker(id, False, udp_receive_queue, udp_send_queue, db_pool))
+            monitor_task = tg.create_task(task_monitor(tcp_worker_task, udp_worker_task, control_queue, status_queue, id))
+    logger.debug(f'Process {pid} finished')
 
 # Echo handler for TCP connections
 async def handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue):
@@ -68,9 +98,9 @@ async def handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue):
             break
         logger.debug(data)
         logger.debug(f'Got TCP data with length {len(data)}')
-        await tcp_send_queue.put(data)
+        tcp_send_queue.put(data)
         logger.debug(f'Awaiting data back')
-        return_data = await tcp_receive_queue.get()
+        return_data = tcp_receive_queue.get()
         logger.debug(f'Got return data with length {len(return_data)}')
 #        hexdump.hexdump(return_data)
         writer.write(return_data)
@@ -97,16 +127,39 @@ class DNSProtocol(asyncio.Protocol):
         logger.debug(data)
         logger.debug(f'Querying database')
         try:
-            await self.receive_queue.put(data)
+            self.receive_queue.put(data)
         except Exception:
             traceback.print_exc()
 
         logger.debug(f'Awaiting data back')
         try:
-            return_data = await self.send_queue.get()
+            return_data = self.send_queue.get()
         except Exception:
             traceback.print_exc()
 
         logger.debug(f'Got return data with length {len(return_data)}')
 #        hexdump.hexdump(return_data)
         self.transport.sendto(return_data, addr)
+
+
+async def udp_server(receive_queue, send_queue, ip_address, port):
+    sock = await asyncudp.create_socket(local_addr=(ip_address, port))
+    print('here')
+    while True:
+        data, addr = await sock.recvfrom()
+        logger.debug(data)
+        logger.debug(f'Querying database')
+        try:
+            receive_queue.put(data)
+        except Exception:
+            traceback.print_exc()
+
+        logger.debug(f'Awaiting data back')
+        try:
+            return_data = send_queue.get()
+        except Exception:
+            traceback.print_exc()
+
+        logger.debug(f'Got return data with length {len(return_data)}')
+#        hexdump.hexdump(return_data)
+        sock.sendto(data, addr)
