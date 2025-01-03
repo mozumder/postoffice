@@ -5,7 +5,6 @@ import logging
 import traceback
 
 import hexdump
-import asyncudp
 import asyncpg
 
 from .query import Query
@@ -14,12 +13,45 @@ from .db import DBConnectInit
 #header_format = '!H2B4H'
 logger = logging.getLogger("dnsserver")
 
-async def worker(id, tcp, receive_queue, send_queue, db_pool):
-    logger.debug(f'{type} worker {id} receiving messages') 
+async def worker(msg: list):
+    id, control_queue, status_queue, udp_receive_queue, udp_send_queue, tcp_receive_queue, tcp_send_queue, dsn, loglevel = msg
+    tcp = False
+    logger.setLevel(loglevel)
+    pid = os.getpid()
+    logger.debug(f'Process {pid} started')
+
+    async with asyncpg.create_pool(dsn,min_size=2, max_size=2, init=DBConnectInit) as db_pool:
+        while True:
+            try:
+                data = udp_receive_queue.get(timeout=1)
+                print(f'worker received msg')
+                response = await Query(db_pool, data, tcp, True)
+                udp_send_queue.put(response)
+            except Empty:
+                pass
+            except Exception:
+                traceback.print_exc()
+
+            try:
+                msg = control_queue.get(block=False)
+                if msg == "stop":
+                    # Process the item
+                    print("Processing:", msg)
+                    status_queue.put(f"stopped")
+                    break
+            except Empty:
+                pass
+            except Exception:
+                traceback.print_exc()
+    logger.debug(f'Process {pid} stopped')
+
+
+async def workerx(id, tcp, receive_queue, send_queue, db_pool):
     if tcp == True:
         type = "TCP"
     else:
         type = "UDP"
+    logger.debug(f'{type} worker {id} receiving messages') 
     while True:
         try:
             logger.debug(f'receive is empty: {receive_queue.empty()}  qsize: {receive_queue.qsize()}') 
@@ -57,6 +89,8 @@ async def task_monitor(tcp_worker_task, udp_worker_task, control_queue, status_q
                 await udp_worker_task
             except asyncio.CancelledError:
                 logger.debug(f"canceled udp_worker_task {id}")
+            except Exception:
+                traceback.print_exc()
 
             tcp_worker_task.cancel()
             logger.debug(f"canceling tcp_worker_task")
@@ -64,6 +98,8 @@ async def task_monitor(tcp_worker_task, udp_worker_task, control_queue, status_q
                 await tcp_worker_task
             except asyncio.CancelledError:
                 logger.debug(f"canceled tcp_worker_task {id}")
+            except Exception:
+                traceback.print_exc()
 
             status_queue.put(f'stopped {id}')
         else:

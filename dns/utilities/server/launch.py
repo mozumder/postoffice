@@ -3,11 +3,13 @@ import logging
 import uuid
 from multiprocessing import Manager
 from multiprocessing.queues import Queue
+import traceback
+from queue import Empty
 
 from django.conf import settings
 from aiomultiprocess import Pool
 
-from .protocol import worker_launcher, DNSProtocol, handle_dns_query, udp_server
+from .protocol import worker, DNSProtocol, handle_dns_query, udp_server
 
 logger = logging.getLogger("dnsserver")
 
@@ -41,46 +43,49 @@ async def dns_main(*args, **options):
     udp_receive_queue: Queue = Manager().Queue()
 
     processes = options['processes']
+    timeout = 4
     loop = asyncio.get_running_loop()
     while True:
         async with asyncio.TaskGroup() as tg:
             query_handlers_tasks = tg.create_task(query_handlers_launcher(processes, dsn, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, udp_send_queue, udp_receive_queue, loglevel))
             tcp_server_tasks = tg.create_task(tcp_server_launcher(ip_address, port, dsn, loop, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, loglevel))
             udp_server_tasks = tg.create_task(udp_server_launcher(ip_address, port, dsn, loop, control_queue, status_queue, udp_send_queue, udp_receive_queue, loglevel))
-            watchdog_task = tg.create_task(watchdog_timer(query_handlers_tasks, tcp_server_tasks, udp_server_tasks, 4, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, udp_send_queue, udp_receive_queue))
+            watchdog_task = tg.create_task(watchdog_timer(processes, query_handlers_tasks, tcp_server_tasks, udp_server_tasks, timeout, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, udp_send_queue, udp_receive_queue))
 
-async def watchdog_timer(query_handlers_tasks, tcp_server_tasks, udp_server_tasks, timeout, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, udp_send_queue, udp_receive_queue):
-    logger.debug(f"Running watchdog timer")
+async def watchdog_timer(processes, query_handlers_tasks, tcp_server_tasks, udp_server_tasks, timeout, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, udp_send_queue, udp_receive_queue):
 
-#    await control_queue.put("stop")
     await asyncio.sleep(timeout)
-    await control_queue.put("stop")
-    return
+    for i in range(processes):
+        control_queue.put("stop")
+        print(f"sent stop {i}")
+
+    for i in range(processes):
+        try:
+            msg = status_queue.get()
+            if msg == "stopped":
+                # Process the item
+                print(f"stop {i} acknowledged:", msg)
+                continue
+        except Empty:
+            print(f'empty control queue')
+            raise
+        except Exception:
+            traceback.print_exc()
+            raise
+
+    print(f'stopping TCP server')
+    tcp_server_tasks.cancel()
     try:
-#        await asyncio.sleep(timeout)
-#        await tcp_receive_queue.put(b'\x00,[?\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x03www\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
-#        await udp_receive_queue.put(b'C\xce\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x03www\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
-#        await control_queue.put("stop")
-        await asyncio.sleep(timeout)
-        await control_queue.put("stop")
-    finally:
-        query_handlers_tasks.cancel()
-        try:
-            await query_handlers_tasks
-        except asyncio.CancelledError:
-            logger.debug("query_handlers_tasks is cancelled now")
+        await tcp_server_tasks
+    except asyncio.CancelledError:
+        logger.debug("tcp_server_tasks is cancelled now")
 
-        tcp_server_tasks.cancel()
-        try:
-            await tcp_server_tasks
-        except asyncio.CancelledError:
-            logger.debug("tcp_server_tasks is cancelled now")
-
-        udp_server_tasks.cancel()
-        try:
-            await udp_server_tasks
-        except asyncio.CancelledError:
-            logger.debug("udp_server_tasks is cancelled now")
+    print(f'stopping UDP server')
+    udp_server_tasks.cancel()
+    try:
+        await udp_server_tasks
+    except asyncio.CancelledError:
+        logger.debug("udp_server_tasks is cancelled now")
 
 async def query_handlers_launcher(processes, dsn, control_queue, status_queue, tcp_send_queue, tcp_receive_queue, udp_send_queue, udp_receive_queue, loglevel):
     logger.debug(f"Launching handlers")
@@ -88,7 +93,7 @@ async def query_handlers_launcher(processes, dsn, control_queue, status_queue, t
         async with Pool(maxtasksperchild=1, childconcurrency=1) as pool:
             logger.debug(f"Mapping tasks")
             results = await pool.map(
-                    worker_launcher, [[
+                    worker, [[
                         uuid.uuid4(), 
                         control_queue, 
                         status_queue, 
@@ -99,17 +104,10 @@ async def query_handlers_launcher(processes, dsn, control_queue, status_queue, t
                         dsn, 
                         loglevel,
                     ] for _ in range(processes)])
-            logger.debug(f"Tasks done")
-            logger.debug(results)
     except asyncio.CancelledError as e:
-        logger.debug(f"Stopping handlers")
-        for i in range(processes):
-            control_queue.put("stop")
-            logger.debug(f"Sent stop msg")
-        for i in range(processes):
-            logger.debug(f"Awaiting acknowledgement")
-            msg = status_queue.get()
-            logger.debug(msg)
+        raise
+    except Exception:
+        traceback.print_exc()
         raise
     finally:
         logger.debug(f"Stopped handlers")
