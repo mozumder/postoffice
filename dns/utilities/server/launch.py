@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import uuid
 from multiprocessing import Manager
 from multiprocessing.queues import Queue
 import traceback
@@ -10,7 +9,6 @@ from django.conf import settings
 from aiomultiprocess import Pool
 
 from .protocol import worker, DNSProtocol, handle_dns_query
-
 
 async def dns_main(*args, **options):
     logger = logging.getLogger("dnsserver")
@@ -115,7 +113,7 @@ async def server_launcher(ip_address, port, dsn, loop, control_queue, status_que
 
     try:
         while True:
-            await asyncio.sleep(3600)  # Essentiall run forever until cancelled
+            await asyncio.sleep(3600)  # Essentially run forever until cancelled
     except asyncio.CancelledError as e:
         logger.debug(f"Stopping Servers")
     finally:

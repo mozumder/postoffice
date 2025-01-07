@@ -44,11 +44,6 @@ async def db_lookup(db_pool, query):
 #    dns_logger.debug(results)
     return results
 
-async def DBConnecter(db_pool_fut, q):
-    db_pool = await db_pool_fut
-    while True:
-        result = await response_queue(db_pool,q)
-
 async def DBConnectInit(conn):
     dns_logger = logging.getLogger("dnsserver")
     db_logger = logging.getLogger("database")
@@ -103,21 +98,4 @@ async def DBConnectInit(conn):
                     db_logger.error("- Please review the most recent stack entries:\n" + "".join(traceback.format_list(traceback.extract_tb(tb, limit=5))))
                     dns_logger.error(f'Caught Database error {value} while trying to exectute sql file {file_name}')
                     dns_logger.error(f'- Ignoring and continuing')
-
-
-def RunDBThread(q):
-    db_logger = logging.getLogger("database")
-    db_logger.info(f'Starting DB Thread')
-
-    db_name = settings.DATABASES['default']['NAME']
-    db_user = settings.DATABASES['default']['USER']
-    db_password = settings.DATABASES['default']['PASSWORD']
-    db_host = settings.DATABASES['default']['HOST']
-    db_port = settings.DATABASES['default']['PORT']
-    dsn = f'postgres://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}'
-
-    db_loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(db_loop)
-    db_pool_fut = asyncpg.create_pool(dsn,init=DBConnect_Init)
-    db_loop.run_until_complete(DBConnecter(db_pool_fut,q))
 

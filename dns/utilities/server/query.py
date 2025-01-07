@@ -1,6 +1,4 @@
 import asyncio
-import functools
-import operator
 import logging
 
 from django.conf import settings
@@ -9,7 +7,6 @@ import hexdump
 import cbitstruct as bitstruct
 from .db import db_lookup
 from .codes import *
-from dns.models import A_Record, Domain
 
 header_struct = bitstruct.compile(header_format)
 question_struct = bitstruct.compile(question_format)
