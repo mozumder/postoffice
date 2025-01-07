@@ -8,8 +8,6 @@ from django.db.utils import ProgrammingError, OperationalError
 # TODO: Optimize UNION statements into single query
 from .codes import *
 
-dblogger = logging.getLogger("database")
-logger = logging.getLogger(__name__)
 
 def protecc_str(name:str):
     return name.replace('"', r'\"').replace("'", r"\'")
@@ -28,9 +26,10 @@ query_commands = {
 }
 
 async def db_lookup(db_pool, query):
+    dns_logger = logging.getLogger("dnsserver")
     # FIXME: Capitalized DNS queries.
     name = protecc_str(query[3]).lower()
-    print(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {name}')
+    dns_logger.debug(f'Got {RR_TYPE[RR_TYPE_LOOKUP[query[0]]]} query: {name}')
     results = []
     if query[1] == DNS_CLASS_INTERNET:
         conn = await db_pool.acquire()
@@ -42,7 +41,7 @@ async def db_lookup(db_pool, query):
         await db_pool.release(conn)
         for record in records:
             results.append(record)
-#    print(results)
+#    dns_logger.debug(results)
     return results
 
 async def DBConnecter(db_pool_fut, q):
@@ -51,6 +50,8 @@ async def DBConnecter(db_pool_fut, q):
         result = await response_queue(db_pool,q)
 
 async def DBConnectInit(conn):
+    dns_logger = logging.getLogger("dnsserver")
+    db_logger = logging.getLogger("database")
     # TODO: Add prepared statements on connection
     
     sql_files = [
@@ -85,10 +86,10 @@ async def DBConnectInit(conn):
         try:
             file = open(dir+'/'+file_name, 'r')
         except FileNotFoundError:
-            logger.info('No SQL prepared statements file: %s' % dir+'/'+file_name)
+            db_logger.info('No SQL prepared statements file: %s' % dir+'/'+file_name)
             pass
         except (OSError, IOError) as e:
-            logger.error('Error reading SQL prepared statements file: %s' % file_name)
+            db_logger.error('Error reading SQL prepared statements file: %s' % file_name)
             raise e
         else:
             sql_prepare=file.read().strip()
@@ -97,15 +98,16 @@ async def DBConnectInit(conn):
                     await conn.execute(sql_prepare.format(**template_values))
                 except (OperationalError, ProgrammingError) as e:
                     type, value, tb = sys.exc_info()
-                    dblogger.error(f"Failed preparing statements statements with {type.__name__}!")
-                    dblogger.error(f'- Specifically, {value}')
-                    dblogger.error("- Please review the most recent stack entries:\n" + "".join(traceback.format_list(traceback.extract_tb(tb, limit=5))))
-                    logger.error(f'Caught Database error {value} while trying to exectute sql file {file_name}')
-                    logger.error(f'- Ignoring and continuing')
+                    db_logger.error(f"Failed preparing statements statements with {type.__name__}!")
+                    db_logger.error(f'- Specifically, {value}')
+                    db_logger.error("- Please review the most recent stack entries:\n" + "".join(traceback.format_list(traceback.extract_tb(tb, limit=5))))
+                    dns_logger.error(f'Caught Database error {value} while trying to exectute sql file {file_name}')
+                    dns_logger.error(f'- Ignoring and continuing')
 
 
 def RunDBThread(q):
-    print(f'Starting DB Thread')
+    db_logger = logging.getLogger("database")
+    db_logger.info(f'Starting DB Thread')
 
     db_name = settings.DATABASES['default']['NAME']
     db_user = settings.DATABASES['default']['USER']

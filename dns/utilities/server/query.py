@@ -52,7 +52,8 @@ async def Query(pool, data, tcp=False):
     if settings.DEBUG == True:
         logger.debug(f'Received data')
         logger.debug(f'-------------')
-        logger.debug(hexdump.hexdump(data))
+        hex_string = hexdump.dump(data)
+        logger.debug(f'{hex_string}')
         logger.debug(f'HEADER:')
         logger.debug(f'  {TCP_length=}')
         logger.debug(f'  {ID_message_id=}')
@@ -212,7 +213,8 @@ async def Query(pool, data, tcp=False):
     if settings.DEBUG == True:
         logger.debug(f'Returned data')
         logger.debug(f'-------------')
-        hexdump.hexdump(return_data)
+        hex_string = hexdump.dump(return_data)
+        logger.debug(f'{hex_string}')
         ID_message_id, QR_response, OPCODE_operation, AA_authoritative_answer, TC_truncation, RD_recursion_desired, RA_recursion_available, AD_authentic_data, CD_checking_disabled, RCODE_response_code, QDCOUNT_questions_count, ANCOUNT_answers_count, NSCOUNT_authoritative_answers_count, ARCOUNT_additional_records_count = header_struct.unpack(return_data)
         TCP_length = 0
         offset = 12

@@ -14,8 +14,9 @@ from .db import DBConnectInit
 #header_format = '!H2B4H'
 
 async def worker(msg: list):
-    control_queue, status_queue, receive_queue, send_queue, dsn = msg
+    control_queue, status_queue, receive_queue, send_queue, dsn, loglevel = msg
     logger = logging.getLogger("dnsserver")
+    logger.setLevel(loglevel)
     tcp = False
     pid = os.getpid()
     logger.debug(f'Process {pid} started')
@@ -44,7 +45,6 @@ async def worker(msg: list):
             except Exception:
                 traceback.print_exc()
     logger.debug(f'Process {pid} stopped')
-
 
 class DNSProtocol(asyncio.Protocol):
     def __init__(self, send_queue, receive_queue):
@@ -87,3 +87,21 @@ class DNSProtocol(asyncio.Protocol):
 #        hexdump.hexdump(return_data)
         transport.sendto(return_data, addr)
 
+async def handle_dns_query(reader, writer, send_queue, receive_queue):
+    logger = logging.getLogger("dnsserver")
+    logger.debug("handling tcp client")
+    while True:
+        data = await reader.read(1024)
+        if not data:
+            break
+        logger.debug(data)
+        logger.debug(f'Got TCP data with length {len(data)}')
+        id = uuid.uuid4()
+        receive_queue.put([id, data, True])
+        logger.debug(f'Awaiting data back')
+        return_id, return_data, tcp = send_queue.get()
+        logger.debug(f'Got return data with length {len(return_data)}')
+#        hexdump.hexdump(return_data)
+        writer.write(return_data)
+        await writer.drain()
+    writer.close()

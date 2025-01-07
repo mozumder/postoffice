@@ -9,7 +9,7 @@ from queue import Empty
 from django.conf import settings
 from aiomultiprocess import Pool
 
-from .protocol import worker, DNSProtocol
+from .protocol import worker, DNSProtocol, handle_dns_query
 
 
 async def dns_main(*args, **options):
@@ -40,13 +40,12 @@ async def dns_main(*args, **options):
     send_queue: Queue = Manager().Queue()
     receive_queue: Queue = Manager().Queue()
 
-
     processes = options['processes']
-    timeout = 4
+    timeout = 14400
     loop = asyncio.get_running_loop()
     while True:
         async with asyncio.TaskGroup() as tg:
-            query_handlers_tasks = tg.create_task(query_handlers_launcher(processes, dsn, control_queue, status_queue, send_queue, receive_queue))
+            query_handlers_tasks = tg.create_task(query_handlers_launcher(processes, dsn, control_queue, status_queue, send_queue, receive_queue, loglevel))
             server_tasks = tg.create_task(server_launcher(ip_address, port, dsn, loop, control_queue, status_queue, send_queue, receive_queue))
             watchdog_task = tg.create_task(watchdog_timer(processes, query_handlers_tasks, server_tasks, timeout, control_queue, status_queue, send_queue, receive_queue))
 
@@ -55,13 +54,12 @@ async def watchdog_timer(processes, query_handlers_tasks, server_tasks, timeout,
 
     await asyncio.sleep(timeout)
 
-    logger.debug(f'stopping server')
+    logger.info(f'Stopping DNS server')
     server_tasks.cancel()
     try:
         await server_tasks
     except asyncio.CancelledError:
         logger.debug("udp_server_tasks is cancelled now")
-
 
     for i in range(processes):
         control_queue.put("stop")
@@ -81,7 +79,7 @@ async def watchdog_timer(processes, query_handlers_tasks, server_tasks, timeout,
             traceback.print_exc()
             raise
 
-async def query_handlers_launcher(processes, dsn, control_queue, status_queue, send_queue, receive_queue):
+async def query_handlers_launcher(processes, dsn, control_queue, status_queue, send_queue, receive_queue, loglevel):
     logger = logging.getLogger("dnsserver")
     logger.debug(f"Launching handlers")
     try:
@@ -94,6 +92,7 @@ async def query_handlers_launcher(processes, dsn, control_queue, status_queue, s
                         receive_queue, 
                         send_queue, 
                         dsn, 
+                        loglevel
                     ] for _ in range(processes)])
     except asyncio.CancelledError as e:
         raise
@@ -103,36 +102,25 @@ async def query_handlers_launcher(processes, dsn, control_queue, status_queue, s
     finally:
         logger.debug(f"Stopped handlers")
 
-        
-async def tcp_server_launcher(ip_address, port, dsn, loop, control_queue, status_queue, tcp_send_queue, tcp_receive_queue):
-    logger = logging.getLogger("dnsserver")
-    logger.debug(f"Launching TCP Server")
-
-    tcp_server = await asyncio.start_server(
-        lambda reader, writer: handle_dns_query(reader, writer, tcp_send_queue, tcp_receive_queue), ip_address, port)
-    addrs = ', '.join(str(sock.getsockname()) for sock in tcp_server.sockets)
-    logger.debug(f'Serving on {addrs}')
-
-    try:
-        async with tcp_server:
-            await tcp_server.serve_forever()
-    except asyncio.CancelledError as e:
-        logger.debug(f"Stopping UDP Server")
-    finally:
-        tcp_server.close()
-
 async def server_launcher(ip_address, port, dsn, loop, control_queue, status_queue, send_queue, receive_queue):
     logger = logging.getLogger("dnsserver")
     logger.debug(f"Launching UDP Server")
     udp_transport, _ = await loop.create_datagram_endpoint(
         lambda: DNSProtocol(send_queue, receive_queue), local_addr=(ip_address, port))
+    logger.debug(f"Launching TCP Server")
+    tcp_server = await asyncio.start_server(
+        lambda reader, writer: handle_dns_query(reader, writer, send_queue, receive_queue), ip_address, port)
+    addrs = ', '.join(str(sock.getsockname()) for sock in tcp_server.sockets)
+    logger.info(f'Serving DNS on {addrs}')
+
     try:
         while True:
             await asyncio.sleep(3600)  # Run for 1 hour
     except asyncio.CancelledError as e:
-        logger.debug(f"Stopping UDP Server")
+        logger.debug(f"Stopping Servers")
     finally:
         udp_transport.close()
+        tcp_server.close()
 
 #            await tcp_receive_queue.put(b'\x00,[?\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x03www\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
 #            await udp_receive_queue.put(b'C\xce\x01 \x00\x01\x00\x00\x00\x00\x00\x01\x03www\x07example\x03net\x00\x00\x01\x00\x01\x00\x00)\x10\x00\x00\x00\x00\x00\x00\x00')
