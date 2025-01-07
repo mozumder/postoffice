@@ -115,7 +115,7 @@ async def server_launcher(ip_address, port, dsn, loop, control_queue, status_que
 
     try:
         while True:
-            await asyncio.sleep(3600)  # Run for 1 hour
+            await asyncio.sleep(3600)  # Essentiall run forever until cancelled
     except asyncio.CancelledError as e:
         logger.debug(f"Stopping Servers")
     finally:

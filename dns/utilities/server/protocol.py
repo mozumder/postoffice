@@ -19,7 +19,7 @@ async def worker(msg: list):
     logger.setLevel(loglevel)
     tcp = False
     pid = os.getpid()
-    logger.debug(f'Process {pid} started')
+    logger.info(f'Process {pid} started')
 
     async with asyncpg.create_pool(dsn,min_size=2, max_size=2, init=DBConnectInit) as db_pool:
         while True:
@@ -44,7 +44,7 @@ async def worker(msg: list):
                 pass
             except Exception:
                 traceback.print_exc()
-    logger.debug(f'Process {pid} stopped')
+    logger.info(f'Process {pid} stopped')
 
 class DNSProtocol(asyncio.Protocol):
     def __init__(self, send_queue, receive_queue):
