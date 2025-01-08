@@ -11,7 +11,7 @@ Django>=5.1
 django-redis-cache>=3.0.1
 hexdump==3.3
 hiredis>=2.0.0
-idna==3.3
+idna==3.7
 psycopg2-binary>=2.9.3
 python-decouple==3.6
 pytz==2022.1
