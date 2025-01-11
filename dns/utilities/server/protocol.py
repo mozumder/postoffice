@@ -52,40 +52,45 @@ class DNSProtocol(asyncio.Protocol):
         self.send_queue = send_queue
         self.receive_queue = receive_queue
         self.loop = asyncio.get_event_loop()
-        self.transports = {}
-        self.msg_ids = {}
         logger.debug(f"DNSProtocol Object Initialized") 
     
     def connection_made(self, transport):
         logger = logging.getLogger("dnsserver")
         logger.debug(f'Got UDP port')
+        self.id = uuid.uuid4()
         self.transport = transport
 
     def datagram_received(self, data, addr):
         logger = logging.getLogger("dnsserver")
         logger.debug(f'Got UDP datagram from {addr} with length {len(data)}')
-        id = uuid.uuid4()
-        self.msg_ids[id] = [data, addr]
-        self.loop.create_task(self.handle_incoming_packet(id, self.transport, data, addr))
+        self.loop.create_task(self.handle_incoming_packet(data, addr))
 
-    async def handle_incoming_packet(self, id, transport, data, addr):
+    async def handle_incoming_packet(self,data, addr):
         logger = logging.getLogger("dnsserver")
         logger.debug(data)
         logger.debug(f'Querying database')
         try:
-            self.receive_queue.put([id, data, False])
+            self.receive_queue.put([self.id, data, False])
         except Exception:
             traceback.print_exc()
 
-        logger.debug(f'Awaiting data back')
-        try:
-            id, return_data, tcp = self.send_queue.get()
-        except Exception:
-            traceback.print_exc()
+        while True:
+            logger.debug(f'Awaiting data back')
+            try:
+                id, return_data, tcp = self.send_queue.get()
+            except Exception:
+                traceback.print_exc()
+            finally:
+                logger.debug(f"Got id: {id} in instance with {self.id}")
+                if id == self.id:
+                    break
+                else:
+                    logger.debug(f"Got id: data for wrong coonection. Returning data to queue")
+                    self.send_queue.put([id, return_data, tcp])
 
         logger.debug(f'Got return data with length {len(return_data)}')
 #        hexdump.hexdump(return_data)
-        transport.sendto(return_data, addr)
+        self.transport.sendto(return_data, addr)
 
 async def handle_dns_query(reader, writer, send_queue, receive_queue):
     logger = logging.getLogger("dnsserver")
@@ -98,8 +103,21 @@ async def handle_dns_query(reader, writer, send_queue, receive_queue):
         logger.debug(f'Got TCP data with length {len(data)}')
         id = uuid.uuid4()
         receive_queue.put([id, data, True])
-        logger.debug(f'Awaiting data back')
-        return_id, return_data, tcp = send_queue.get()
+
+        while True:
+            logger.debug(f'Awaiting data back')
+            try:
+                return_id, return_data, tcp = send_queue.get()
+            except Exception:
+                traceback.print_exc()
+            finally:
+                logger.debug(f"Got id: {return_id} in tcp task with {id}")
+                if return_id == id:
+                    break
+                else:
+                    logger.debug(f"Got id: data for wrong task. Returning data to queue")
+                    send_queue.put([return_id, return_data, tcp])
+
         logger.debug(f'Got return data with length {len(return_data)}')
 #        hexdump.hexdump(return_data)
         writer.write(return_data)
